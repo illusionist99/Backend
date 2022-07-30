@@ -14,9 +14,9 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
     constructor(private readonly userService: UserService, private readonly configService: ConfigService) {
 
         super({
-            clientID: configService.get<string>('clientID'),
-            clientSecret: configService.get<string>('clientSecret'),
-            callbackURL: configService.get<string>('callbackURL')
+            clientID: process.env.clientID,
+            clientSecret: process.env.clientSecret,
+            callbackURL: process.env.callbackURL,
         })
     }
 

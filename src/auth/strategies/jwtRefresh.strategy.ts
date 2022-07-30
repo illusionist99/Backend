@@ -1,5 +1,4 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
@@ -9,7 +8,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 @Injectable()
 export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh' ) {
 
-    constructor(private readonly configService: ConfigService) {
+    constructor() {
     
 
         console.log('Jsut Called JWTRefresh ');
@@ -26,7 +25,7 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh' ) {
                 }
             ]),
             ignoreExpiration: false,
-            secretOrKey: configService.get<string>('RFH_SECRET'),
+            secretOrKey: process.env.RFH_SECRET,
         });
     }
 
