@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Request } from '@nestjs/common';
+import { ForbiddenException, Injectable, Request, UploadedFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
@@ -15,6 +15,14 @@ export class UserService {
     private userRepo: Repository<User>
     ) {}
 
+    async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
+
+      const user = await  this.findOne(uid);
+
+      if (!user) throw new ForbiddenException();
+
+      return  await this.userRepo.update(user.uid, {picture: avatar.buffer});
+    }
     
     async createLocal(username: string, password: string) : Promise<User> {
       

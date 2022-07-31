@@ -1,10 +1,12 @@
-import { Controller, Request, Get, Post, Body, Patch, Param, Delete, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Request, Get, Post, Body, Patch, Param, Delete, UseGuards, UnauthorizedException, ForbiddenException, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from '../dtos/user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { User } from 'src/entities/user.entity';
 import { updateUserDto } from 'src/entities/update.user';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 
 @Controller('user')
@@ -19,10 +21,15 @@ export class UserController {
     return this.userService.findOne(req.user.uid);
   }
 
+  @Post(':id/avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File)  {
   
+    return this.userService.updateAvatar(uid, file);
+  }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
