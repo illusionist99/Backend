@@ -1,0 +1,88 @@
+version: '3.1'
+
+volumes:
+  db-data:
+    driver: local
+
+services:
+
+  front:
+    build: ./$SERVICES/Front/
+    container_name: Pong-front
+    restart: always
+    ports:
+      - '80:8000' # expose ports - HOST:CONTAINER
+    volumes:
+      - ./$SERVICES/Front:/usr/src/app
+    environment:
+      USERS_API: $USERS_API
+      GAME_API: $GAME_API
+      CHAT_API: $CHAT_API
+      AUTH42REDIRECT: $AUTH42REDIRECT
+
+  game:
+    build: ./$SERVICES/Game/
+    container_name: Pong-game
+    restart: always
+    ports:
+      - '3001:3001' # expose ports - HOST:CONTAINER
+    depends_on:
+      - users
+    volumes:
+      - ./$SERVICES/Game:/usr/src/app
+    environment:
+      USERS_HOST: $USERS_HOST
+      USERS_PORT: $USERS_PORT
+
+  users:
+    build: ./$SERVICES/Users/
+    container_name: Pong-users
+    restart: always
+    ports:
+      - '3500:3500' # expose ports - HOST:CONTAINER
+    volumes:
+      - ./$SERVICES/Users/:/usr/src/app
+    environment:
+      clientID: $clientID
+      clientSecret: $clientSecret
+      callbackURL: $callbackURL
+      JWT_SECRET: $JWT_SECRET
+      JWT_EXP_H: $JWT_EXP_H
+      RFH_SECRET: $RFH_SECRET
+      RFH_EXP_D: $RFH_EXP_D
+      POSTGRES_HOST: $DB_HOST
+      POSTGRES_PORT: $DB_PORT
+      POSTGRES_USER: $DB_USERNAME
+      POSTGRES_PASS: $DB_PASSWORD
+      POSTGRES_DB: $DB_DATABASE
+    depends_on:
+      - db
+
+
+
+  db:
+    image: postgres
+    container_name: Pong-db
+    restart: always
+    environment:
+      POSTGRES_DB: $DB_DATABASE
+      POSTGRES_USER: $DB_USERNAME
+      POSTGRES_PASSWORD: $DB_PASSWORD
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+# phpMyAdmin just for development in case we need a look up to database
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: neimheadh/phppgadmin:latest
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      POSTGRES_HOST: $DB_HOST
+      POSTGRES_PORT: $DB_PORT
+      POSTGRES_USER: $DB_USERNAME
+      POSTGRES_PASS: $DB_PASSWORD
+    depends_on:
+      - db

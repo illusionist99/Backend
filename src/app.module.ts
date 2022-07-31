@@ -12,6 +12,7 @@ import { fortyTwoStrat } from './auth/strategies/fortytwo.strategy';
 import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
 
 
+console.log(process.env)
 
 @Module({
   imports: [
@@ -20,11 +21,11 @@ import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
     }),
     TypeOrmModule.forRoot({
       type: "postgres",
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+      host: process.env.POSTGRES_HOST,
+      port: parseInt(process.env.POSTGRES_PORT),
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASS,
+      database: process.env.POSTGRES_DB,
       logging: true,
       subscribers: [],
       migrations: [],
