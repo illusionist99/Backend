@@ -37,7 +37,8 @@ export class UserController {
   @Get()
   currentUser(@Request() req) {
 
-    return this.userService.findOne(req.user.uid);
+    console.log(req.user.uid);
+    return this.userService.findOne(req.user.userId);
   }
 
   @Post(':id/avatar')
