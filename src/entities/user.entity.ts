@@ -35,4 +35,6 @@ export class User {
     @Column()
     refreshToken: string;
 
+    
+
 }

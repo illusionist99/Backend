@@ -7,6 +7,7 @@ import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
+import { jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 
 
 
@@ -15,7 +16,7 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
     origin: '*',
   }, 
 })
-@UseGuards(JwtWebSocketGuard)
+@UseGuards(JwtWebSocketGuard, jwtRefreshAuthGuard)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private readonly chatService: ChatService) {}

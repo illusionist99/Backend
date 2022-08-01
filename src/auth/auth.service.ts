@@ -42,25 +42,27 @@ export class AuthService {
             console.log( 'Payload matchs rft in db  ', payload);
             const tokens = await this.getTokens(payload.sub, payload.username);
 
-            await this.updateRtHash(payload.sub, tokens.refreshToken);
+            // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
+            delete tokens.refreshToken;
             return tokens;
         }
         throw new BadRequestException();
     }
 
-    async verifyRT(authToken: string) {
+    async verifyRT(refreshToken: string) {
     
-        return await  this.jwtService.verify(authToken, {secret: this.configService.get<string>('RFH_SECRET')});
+        return await  this.jwtService.verify(refreshToken, { secret: process.env.RFH_SECRET });
     }
 
     async verify(authToken: string) {
     
-        return await  this.jwtService.verify(authToken, {secret: this.configService.get<string>('JWT_SECRET')});
+        return await  this.jwtService.verify(authToken, { secret: process.env.JWT_SECRET });
     }
 
     async ValidateUser(username: string, password: string) : Promise<any>  {
     
+        if (!username || !password) throw new ForbiddenException();
         const user = await this.userService.findByUsername(username);
 
         const isMatch = await bcrypt.compare(password, user.password);

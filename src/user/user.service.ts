@@ -1,10 +1,12 @@
-import { ForbiddenException, Injectable, Request, UploadedFile } from '@nestjs/common';
+import { Body, ForbiddenException, Injectable, Request, Response, UploadedFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
 import { updateUserDto } from '../entities/update.user'
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { friendList } from 'src/entities/friendList.entity';
+import { friendListDto } from 'src/dtos/friendList.dto';
 
 @Injectable()
 export class UserService {
@@ -12,8 +14,59 @@ export class UserService {
 
   constructor(
     @InjectRepository(User)
-    private userRepo: Repository<User>
+    private userRepo: Repository<User>,
+
+    @InjectRepository(friendList)
+    private friendListRepo: Repository<friendList>
     ) {}
+
+
+    async getFriends(@Request() req) : Promise<friendList[]> {
+    
+      const uid = req.user.uid;
+      return await this.friendListRepo.find({
+        where: [
+          {
+            status: true,
+            blocked: false,
+            recieverUid: uid,
+          },
+          {
+            status: true,
+            blocked: false,
+            senderUid: uid,
+          }
+        ]
+      })
+    }
+
+    async sendFriendInvite(@Request() req, @Body() payload: any) : Promise<friendList> {
+    
+      let newFriendRequest : friendListDto = new friendListDto;
+
+      newFriendRequest.senderUid = req.user.uid;
+      newFriendRequest.recieverUid = payload['ruid'];
+      newFriendRequest.status = false;
+      this.friendListRepo.create(newFriendRequest);
+      return await this.friendListRepo.save(newFriendRequest);
+    }
+
+    async UpdateFriendInvite(uid: string, status: boolean) : Promise<any> {
+    
+      const friendship = await this.friendListRepo.findOne({
+        where: {
+          uid: uid,
+        }
+      });
+
+      if (!friendship) throw new ForbiddenException();
+
+      return await this.friendListRepo.update(uid, {
+        status: status,
+      })
+       
+      // return 
+    }
 
     async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
 

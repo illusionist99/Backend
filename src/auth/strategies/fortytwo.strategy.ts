@@ -22,7 +22,6 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
 
     async validate(access_token: string, refreshToken: string, profile: any, cb: any) {
     
-        // Find Or create 
 
         console.log('Calling validate Function throught 42 Contoller')
 

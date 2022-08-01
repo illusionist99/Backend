@@ -17,10 +17,10 @@ export class JwtWebSocketGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
     
         const client = context.switchToWs().getClient();
-        const authToken : string = client.handshake.headers.cookie.split('=')[1];
+        const refreshToken : string = client.handshake.headers.cookie.split('=')[1];
 
-        // console.log(authToken);
-        const payload =  await this.authService.verify(authToken);
+        // console.log(refreshToken);
+        const payload =  await this.authService.verifyRT(refreshToken);
 
         const user: User = await this.authService.ValidatePayload(payload);
 

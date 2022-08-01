@@ -13,7 +13,7 @@ export class AppController {
   }
 
   @Get('auth/isLogged')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, jwtRefreshAuthGuard)
   isLogged(@Request() req) {
 
     return req.user;
@@ -32,13 +32,15 @@ export class AppController {
   async LoginfortyTwo(@Query() code, @Request() req, @Response({ passthrough: true }) res) : Promise<any>{
 
     code = code['code'];
+    console.log('code being used ', code);
     const payload = await this.authService.findOrCreate(code);
     
     if (payload) {
 
       res.cookie('jwt-rft', payload['refreshToken'], {httpOnly: true});
-      return payload;
-    } 
+      return payload['access_token'];
+    }
+    res.send(401);
     return new ForbiddenException();
   }
  
