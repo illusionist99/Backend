@@ -1,13 +1,8 @@
-import { Controller, Request, Get, Post, Body, Patch, Param, Delete, UseGuards, UnauthorizedException, ForbiddenException, UseInterceptors, UploadedFile, Res, Req } from '@nestjs/common';
+import { Controller, Request, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from '../dtos/user.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
-import { User } from 'src/entities/user.entity';
 import { updateUserDto } from 'src/entities/update.user';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { friendList } from 'src/entities/friendList.entity';
 
 
 @Controller('user')
@@ -16,23 +11,25 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
 
-  @Get('friends')
-  async getFriends(@Request() req) : Promise<friendList[]> {
+  // @Get('friends')
+  // async getFriends(@Request() req) : Promise<friendList[]> {
   
-    return this.userService.getFriends(req);
-  }
+  //   return this.userService.getFriends(req);
+  // }
 
-  @Post('addf')
-  async sendFriendInvite(@Request() req, @Body() payload: any) : Promise<friendList> {
+  // @Post('addf')
+  // async sendFriendInvite(@Body() payload: any) : Promise<friendList> {
 
-    return this.userService.sendFriendInvite(req, payload);
-  }
+  //   // const sender : string = payload['sender'];
+  //   // const receiver: string = payload['receiver']
+  //   // return this.userService.sendFriendInvite(sender, payload);
+  // }
 
-  @Post('fstatus')
-  async updateFriendStatus(@Request() req, @Body() payload: any) {
+  // @Post('fstatus')
+  // async updateFriendStatus(@Request() req, @Body() payload: any) {
 
-    return this.userService.UpdateFriendInvite(req.user.uid, payload['status']);
-  }
+  //   return this.userService.UpdateFriendInvite(req.user.uid, payload['status']);
+  // }
 
   @Get()
   currentUser(@Request() req) {

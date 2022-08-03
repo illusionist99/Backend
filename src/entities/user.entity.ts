@@ -1,6 +1,7 @@
 import { Entity, Exclusion, JoinTable } from "typeorm";
 import { PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { ChatRoom } from './chatRoom.entity';
+import { friendsRequest } from "./friendRequest.entity";
 
 @Entity()
 export class User {
@@ -35,5 +36,12 @@ export class User {
 
     @Column()
     refreshToken: string;
+
+
+
+    @OneToMany(type => friendsRequest, friend => friend.senderUid)
+    @JoinTable()
+    friends: friendsRequest;
+
 
 }

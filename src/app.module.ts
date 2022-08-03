@@ -10,6 +10,7 @@ import { ChatModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
 import { fortyTwoStrat } from './auth/strategies/fortytwo.strategy';
 import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
+import { friendsRequest } from './entities/friendRequest.entity';
 
 
 console.log(process.env)
@@ -29,7 +30,7 @@ console.log(process.env)
       logging: true,
       subscribers: [],
       migrations: [],
-      entities: [User, ChatMessage, ChatRoom],
+      entities: [User, ChatMessage, ChatRoom, friendsRequest],
       synchronize: true, // to remove when finished 
     }),
     UserModule,

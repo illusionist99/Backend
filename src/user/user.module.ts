@@ -4,12 +4,12 @@ import { UserController } from './user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { MulterModule } from '@nestjs/platform-express';
-import { friendList } from 'src/entities/friendList.entity';
+import { friendsRequest } from 'src/entities/friendRequest.entity';
 
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, friendList]), MulterModule.register()],
+  imports: [TypeOrmModule.forFeature([User, friendsRequest]), MulterModule.register()],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

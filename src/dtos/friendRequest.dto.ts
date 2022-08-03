@@ -1,10 +1,11 @@
 
 
-export class friendListDto {
+export class friendRequestDto {
 
+    uid: string;
     senderUid: string;
     recieverUid: string;
+    date: Date;
     status: boolean;
-    uid: string;
     blocked: boolean;
 }
