@@ -81,7 +81,7 @@ export class UserService {
       
       // 'This action adds a new user';
       
-      let newUser = new CreateUserDto();
+      let newUser = new CreateUserDto;
       
       newUser.login = username;
       newUser.displayedName = username;
@@ -91,6 +91,7 @@ export class UserService {
       newUser.password = hash;
       newUser.refreshToken = "";
       password = undefined;
+      newUser.chatRooms = [];
       // createUserDto.password = bycrypt
       // console.log(newUser, username, password);
       // this.userRepo.create(newUser);
@@ -100,7 +101,7 @@ export class UserService {
     async create(createUserDto: CreateUserDto) : Promise<User> {
       
       // 'This action adds a new user';
-  
+      createUserDto.chatRooms = [];
       const saltOrRounds = 10;
       const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
       createUserDto.password = hash;

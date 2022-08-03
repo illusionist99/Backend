@@ -1,4 +1,4 @@
-import { Entity } from "typeorm";
+import { Entity, Exclusion, JoinTable } from "typeorm";
 import { PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { ChatRoom } from './chatRoom.entity';
 
@@ -29,12 +29,11 @@ export class User {
     @Column({ unique: true, nullable: true })
     email: string;
 
-    @OneToMany(type => ChatRoom, chatroom => chatroom.owner)
-    ChatRooms: ChatRoom[];
+    @OneToMany(type => ChatRoom, chatroom => chatroom.owner, {cascade: true})
+    @JoinTable({})
+    chatRooms: ChatRoom[];
 
     @Column()
     refreshToken: string;
-
-    
 
 }

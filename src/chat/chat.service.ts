@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
+import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 // import { UpdateChatDto } from '../dtos/';
@@ -16,7 +17,9 @@ export class ChatService {
     @InjectRepository(ChatMessage)
     private chatMessageRepo : Repository<ChatMessage>,
     @InjectRepository(ChatRoom)
-    private chatRoomRepo: Repository<ChatRoom> )   {
+    private chatRoomRepo: Repository<ChatRoom>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>)   {
 
   }
 
@@ -26,13 +29,14 @@ export class ChatService {
     this.chatMessageRepo.create(createChatDto);
     console.log(createChatDto);
     return await this.chatMessageRepo.save(createChatDto);
-    // return 'This action adds a new chat';
+
   }
 
-  async createRoom(createChatRoom : createChatRoomDto) : Promise<createChatRoomDto> {
+  async createRoom(uid: string, createChatRoom : createChatRoomDto) : Promise<createChatRoomDto> {
 
     this.chatRoomRepo.create(createChatRoom);
-    return this.chatRoomRepo.save(createChatRoom);
+
+    return  await this.chatRoomRepo.save(createChatRoom);
   }
  
   async joinRoom() {
@@ -45,23 +49,33 @@ export class ChatService {
 
   async findAll() : Promise<ChatMessage[]> {
   
-    return await this.chatMessageRepo.find();
+    return await this.chatMessageRepo.find({relations: ['ownerId']});
     // return `This action returns all chat`;
   
   }
 
-  async findAllRooms() {
-    console.log( await this.chatRoomRepo.find());
-    return await this.chatRoomRepo.find();
+  async findAllRooms(uid: string) {
+    // console.log( await this.chatRoomRepo.find());
+    // return await this.chatRoomRepo.find();
+    
+    console.log('looking for ', uid)
+    const user = await this.userRepo.findOne({ where: {uid}, relations: ['chatRooms']});
+    console.log(user);
+    return user.chatRooms ;
   }
 
-  async findRoomByName(name: string) : Promise<ChatRoom> {
+
+  async findRoomByName(name: string) : Promise<any> {
   
     return await this.chatRoomRepo.findOne({where: {name: name}});
   }
-  async findOne(id: string) : Promise<ChatMessage> {
+  async findOne(id: string) : Promise<ChatRoom[]> {
 
-    return await this.chatMessageRepo.findOne({where: {messageId: id}});
+    const chat =  await this.chatRoomRepo.find({ where: {cid: id}, relations: ['messages'] });
+
+    console.log(chat);
+
+    return chat;
     // return `This action returns a #${id} chat`;
   }
 
@@ -71,7 +85,7 @@ export class ChatService {
 
   async remove(id: string) : Promise<ChatMessage> {
   
-    const chatMessage : ChatMessage  =  await this.findOne(id);
+    const chatMessage : ChatMessage  =  await this.chatMessageRepo.findOne({ where: {messageId: id}});
     return this.chatMessageRepo.remove(chatMessage);
   }
 }

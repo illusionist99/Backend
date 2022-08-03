@@ -13,6 +13,10 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
 
     constructor(private readonly userService: UserService, private readonly configService: ConfigService) {
 
+
+        console.log('env usied are loaded :', process.env.clientID,
+            process.env.clientSecret,
+            process.env.callbackURL,)
         super({
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,

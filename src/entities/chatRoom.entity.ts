@@ -1,20 +1,22 @@
 import { ChatMessage } from "./chatMessage.entity";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 
 @Entity()
 export class ChatRoom {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn('uuid')
     cid: string;
 
     @Column()
     type: string;
     
     @ManyToOne(type => User, user => user.uid)
-    owner: string;
+    owner: User[];
     
-    @OneToMany(type => ChatMessage, chatMessage => chatMessage.roomId)
+    @OneToMany(type => ChatMessage, chatMessage => chatMessage.roomId, {cascade: true})
+    @JoinTable({
+    })
     messages: ChatMessage[];
 
     @Column()

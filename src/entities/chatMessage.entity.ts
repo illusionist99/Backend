@@ -1,21 +1,21 @@
 import { ChatRoom } from "./chatRoom.entity";
 import { User } from "./user.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ChatMessage {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn('uuid')
     messageId: string;
 
     @Column( { unique: true })
     text: string;
 
-    @OneToOne(type => ChatRoom, chatRoom => chatRoom.cid)
-    roomId: string;
+    @ManyToOne(type => ChatRoom, chatRoom => chatRoom.cid)
+    roomId: ChatRoom;
 
-    @OneToOne(type => User, user => user.uid)
-    ownerId: string;
+    @ManyToOne(type => User, user => user.uid)
+    ownerId: User;
 
     @Column()
     createdAt: Date;

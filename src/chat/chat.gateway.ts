@@ -16,7 +16,7 @@ import { jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
     origin: '*',
   }, 
 })
-@UseGuards(JwtWebSocketGuard, jwtRefreshAuthGuard)
+@UseGuards(JwtWebSocketGuard)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private readonly chatService: ChatService) {}
@@ -29,13 +29,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   handleDisconnect(@ConnectedSocket() client: Socket) {
   
     console.log('usre Logged Out ', client.data.user);
-    console.log('Disconnected : ', client.id);
+    console.log('Disconnected : ', client.data);
 
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
 
-    console.log('Logged in user ', client.data.user);
+    console.log('Logged in user ', client.data);
     console.log('Connected ', client.id);
   }
 
@@ -48,13 +48,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     // console.log('user created Room', client.data.user);
     let room : ChatRoom = new createChatRoomDto();
 
-
+    console.log(client.data.user.uid);
     room.createdAt = new Date();  
     room.owner = client.data.user.uid;
     room.name = roomName;
     room.type = "public";
     this.server.emit("RoomCreated", roomName);
-    return this.chatService.createRoom(room);
+    return this.chatService.createRoom(client.data.user.uid, room);
   }
 
   @WebSocketServer()
@@ -64,10 +64,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('msgToServer')
   async create(@ConnectedSocket() client: Socket, @MessageBody() message: {room: string, message: string}) : Promise<ChatMessage> {
     
+    console.log('user send msg to server ', client.data.user);
     const chatMessage: ChatMessage = new createChatMessageDto;
     console.log(message);
     chatMessage.ownerId = client.data.user.uid;
-    chatMessage.roomId = "sdff";
+
+    const roomO = await this.chatService.findRoomByName(message['room']);
+    if (!roomO) throw new WsException("Error"); 
+    chatMessage.roomId = roomO;
     chatMessage.text = message['message'];
     chatMessage.createdAt = new Date();
     this.server.to(message['room']).emit('msgToClient', {username: client.data.user.displayedName, message: message['message']});
@@ -129,8 +133,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 
   @SubscribeMessage('findAllRooms')
-  async findAllRooms() {
-    return await this.chatService.findAllRooms();
+  async findAllRooms(@ConnectedSocket() client: Socket) {
+    return await this.chatService.findAllRooms(client.data.user.uid);
   }
 
   @SubscribeMessage('findAllChat')

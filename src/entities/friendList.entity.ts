@@ -3,7 +3,7 @@ import { Column, PrimaryGeneratedColumn } from "typeorm";
 
 export class friendList {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn('uuid')
     uid: string;
 
     @Column({ unique: true })

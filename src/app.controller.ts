@@ -34,7 +34,7 @@ export class AppController {
     code = code['code'];
     console.log('code being used ', code);
     const payload = await this.authService.findOrCreate(code);
-    
+    console.log(payload);
     if (payload) {
 
       res.cookie('jwt-rft', payload['refreshToken'], {httpOnly: true});

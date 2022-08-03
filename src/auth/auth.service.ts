@@ -90,13 +90,17 @@ export class AuthService {
             url: "https://api.intra.42.fr/oauth/token",
             method: "POST",
             data: {
+        
                 grant_type: "authorization_code",
-                client_id: this.configService.get<string>('clientID'),
-                client_secret: this.configService.get<string>('clientSecret'),
+                client_id: process.env.clientID,
+                client_secret: process.env.clientSecret,
                 code,
-                redirect_uri: this.configService.get<string>('callbackURL'),
+                redirect_uri: process.env.callbackURL,
             }
         });
+
+
+        console.log(authToken);
 
         const token =  authToken.data["access_token"];
   
@@ -143,12 +147,12 @@ export class AuthService {
 
         return {
             access_token: await this.jwtService.signAsync(payload, {
-                secret: this.configService.get<string>('JWT_SECRET'),
-                expiresIn:  this.configService.get<string>('JWT_EXP_H'),    
+                secret: process.env.JWT_SECRET,
+                expiresIn:  process.env.JWT_EXP_H,    
             }),
             refreshToken: await this.jwtService.signAsync(payload, {
-                secret: this.configService.get<string>('RFH_SECRET'),
-                expiresIn: this.configService.get<string>('RFH_EXP_D')
+                secret: process.env.RFH_SECRET,
+                expiresIn: process.env.RFH_EXP_D,
             }),
         }
 
