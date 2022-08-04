@@ -17,9 +17,12 @@ export class JwtWebSocketGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
     
         const client = context.switchToWs().getClient();
-        const refreshToken : string = client.handshake.headers.cookie.split('=')[1];
+        const cookieName: string = 'jwt-rft';
+        let cookies = client.handshake.headers.cookie.split(';').map(c => c.trim()).filter( cookie => {return cookie.substring(0,cookieName.length) === cookieName});
 
-        // console.log(refreshToken);
+        const refreshToken : string = cookies[0].split('=')[1];
+
+        console.log('ws cookie extractd token ', refreshToken);
         const payload =  await this.authService.verifyRT(refreshToken);
 
         const user: User = await this.authService.ValidatePayload(payload);
