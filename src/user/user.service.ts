@@ -34,8 +34,8 @@ export class UserService {
       
       let newUser = new CreateUserDto;
       
-      newUser.login = username;
-      newUser.displayedName = username;
+      newUser.username = username;
+      newUser.nickname = username;
 
       const saltOrRounds = 10;
       const hash = await bcrypt.hash(password, saltOrRounds);
@@ -83,7 +83,7 @@ export class UserService {
   async findByUsername(username: string) : Promise<User>{
     // `This action returns a #${id} user`; 
   
-    const user = await this.userRepo.findOne({ where: { login: username }});
+    const user = await this.userRepo.findOne({ where: { username }});
 
     if (user)
       return user;

@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { updateUserDto } from 'src/entities/update.user';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { User } from 'src/entities/user.entity';
 
 
 @Controller('user')
@@ -30,6 +31,13 @@ export class UserController {
 
   //   return this.userService.UpdateFriendInvite(req.user.uid, payload['status']);
   // }
+
+
+  @Get(':username')
+  async getUser(@Param('username') username: string) : Promise<User> {
+  
+    return this.userService.findByUsername(username);
+  }
 
   @Get()
   currentUser(@Request() req) {

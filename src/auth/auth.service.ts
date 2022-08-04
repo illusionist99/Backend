@@ -117,7 +117,7 @@ export class AuthService {
         let user  = await this.userService.findByUsername(userData.data.login);
         if ( user ) {
 
-            const tokens = await this.getTokens(user.uid, user.login);
+            const tokens = await this.getTokens(user.uid, user.username);
 
             await this.updateRtHash(user.uid, tokens.refreshToken);
 
@@ -127,14 +127,15 @@ export class AuthService {
         const newUser = new CreateUserDto;
 
         newUser.email = userData.data.email;
-        newUser.displayedName = userData.data.displayname;
-        newUser.avatar = userData.data.image_url;
-        newUser.login = userData.data.login;
+        newUser.nickname = userData.data.displayname;
+        // newUser.avatar = userData.data.image_url;
+        newUser.username = userData.data.login;
+        newUser.avatar = "https://avatars.dicebear.com/api/bottts/" + newUser.nickname + ".svg";
         // const chatRoom = new ChatRoom;
         // newUser.chatRooms =  [chatRoom];
         newUser.password = 'defaultpassword';
         await this.userService.create(newUser);
-        const tokens = await this.getTokens(newUser.uid, newUser.login);
+        const tokens = await this.getTokens(newUser.uid, newUser.username);
         await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
         console.log('created New User and assigned RefreshToken');

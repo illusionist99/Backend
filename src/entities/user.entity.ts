@@ -10,19 +10,19 @@ export class User {
     uid: string;
 
     @Column({ unique: true, nullable: true})
-    displayedName: string;
+    nickname: string; //nickname // can be updated 
 
     @Column({nullable: true})
-    avatar: string;
+    avatar: string; // 42 profile image link 
 
     @Column({
         type: 'bytea',
         nullable: true
     })
-    picture: Uint8Array;
+    picture: Uint8Array; // can be updated as array 
 
     @Column({ unique: true })
-    login: string;
+    username: string;
 
     @Column()
     password: string;
@@ -34,14 +34,24 @@ export class User {
     @JoinTable({})
     chatRooms: ChatRoom[];
 
+    
     @Column()
     refreshToken: string;
+    
+    @Column({default: 'offline'})
+    status: string;
 
-
-
+    @Column({default: 0})
+    gameXp: number;
+    
     @OneToMany(type => friendsRequest, friend => friend.senderUid)
     @JoinTable()
     friends: friendsRequest;
 
+    @Column({default: 0})
+    wins: number;
+
+    @Column({ default: 0})
+    loses: number;
 
 }

@@ -36,10 +36,10 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
             return cb(null, userFound);
         const user = new CreateUserDto;
 
-        user.displayedName = profile['displayName'];
+        user.nickname = profile['displayName'];
         user.avatar = profile['photos']['value'];
         user.email = profile['emails'][0]['value'];
-        user.login = profile['username'];
+        user.username = profile['username'];
         const saltOrRounds = 10;
         const hash = await bcrypt.hash("defaultpass", saltOrRounds);
         user.password = hash;

@@ -74,7 +74,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     chatMessage.roomId = roomO;
     chatMessage.text = message['message'];
     chatMessage.createdAt = new Date();
-    this.server.to(message['room']).emit('msgToClient', {username: client.data.user.displayedName, message: message['message']});
+    this.server.to(message['room']).emit('msgToClient', {username: client.data.user.nickname, message: message['message']});
     return  this.chatService.create(chatMessage);
   }
 
