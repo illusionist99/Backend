@@ -35,6 +35,16 @@ export class FriendsController {
         return this.friendsService.UpdateFriendInvite(uid, status);
     }
 
+    @Post('block')
+    async blockFriendRequest(@Body() payload) : Promise<friendsRequest> {
+    
+        const uid : string = payload['uid'];
+        const blocked: boolean = payload['blocked'];
+
+        if (!uid) throw new ForbiddenException();
+        return this.friendsService.blockFriendRequest(uid, blocked);
+    }
+
     @Get('all') 
     async allFriends(@Request() req) : Promise<friendsRequest[]> {
    

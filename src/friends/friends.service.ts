@@ -61,6 +61,15 @@ export class FriendsService {
       return await this.friendRequestRepo.update(uid, {status});
     }
 
+    async blockFriendRequest(uid: string, blocked: boolean) : Promise<any> {
+    
+        const friendship = await this.friendRequestRepo.findOne({where: {uid}});
+  
+        if (!friendship) throw new ForbiddenException();
+  
+        return await this.friendRequestRepo.update(uid, {blocked});
+      }
+
 
     
 }
