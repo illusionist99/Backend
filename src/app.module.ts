@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { fortyTwoStrat } from './auth/strategies/fortytwo.strategy';
 import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
 import { friendsRequest } from './entities/friendRequest.entity';
+import { friendsModule } from './friends/friends.module';
 
 
 console.log(process.env)
@@ -35,7 +36,8 @@ console.log(process.env)
     }),
     UserModule,
     ChatModule,
-    AuthModule
+    AuthModule,
+    friendsModule
     ],
   controllers: [fortyTwoStrat, AppController],
   providers: [JwtStartRefresh],

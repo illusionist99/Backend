@@ -25,6 +25,16 @@ export class FriendsController {
         return this.friendsService.addFriend(sender, receiver);        
     }
 
+    @Post('accept')
+    async acceptFriendRequest(@Body() payload) : Promise<friendsRequest> {
+    
+        const uid : string = payload['uid'];
+        const status: boolean = payload['status'];
+
+        if (!uid || !status) throw new ForbiddenException();
+        return this.friendsService.UpdateFriendInvite(uid, status);
+    }
+
     @Get('all') 
     async allFriends(@Request() req) : Promise<friendsRequest[]> {
    

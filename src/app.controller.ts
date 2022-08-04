@@ -38,7 +38,7 @@ export class AppController {
     if (payload) {
 
       res.cookie('jwt-rft', payload['refreshToken'], {httpOnly: true});
-      return payload['access_token'];
+      return { access_token : payload['access_token']};
     }
     res.send(401);
     return new ForbiddenException();
