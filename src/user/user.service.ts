@@ -90,6 +90,15 @@ export class UserService {
     return null;
   }
 
+  async findById(uid: string) : Promise<User>{
+    // `This action returns a #${id} user`; 
+  
+    const user = await this.userRepo.findOne({ where: { uid }});
+
+    if (user)
+      return user;
+    return null;
+  }
 
   async update(id: string, updateUserDto: updateUserDto) {
   

@@ -1,17 +1,18 @@
-import { Controller, Get, UseGuards, Request, Param } from "@nestjs/common";
+import { Controller, Get, UseGuards, Request, Param, Post } from "@nestjs/common";
 import { get } from "http";
 import { JwtAuthGuard, jwtRefreshAuthGuard } from "src/auth/guards/jwt.guard";
 import { ChatService } from "./chat.service";
 
 
 @Controller('chat')
-@UseGuards(jwtRefreshAuthGuard)
+@UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
 export class ChatController {
 
     constructor( private chatService: ChatService) {
     
 
     }
+
 
 
     @Get('rooms')
@@ -25,5 +26,6 @@ export class ChatController {
 
         return this.chatService.findOne(uid);
     }
+
 
 } 

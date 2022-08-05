@@ -1,7 +1,8 @@
-import { Entity, Exclusion, JoinTable } from "typeorm";
+import { Entity, Exclusion, JoinTable, OneToOne } from "typeorm";
 import { PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { ChatRoom } from './chatRoom.entity';
 import { friendsRequest } from "./friendRequest.entity";
+import { gameEntity } from "./game.entity";
 
 @Entity()
 export class User {
@@ -54,4 +55,6 @@ export class User {
     @Column({ default: 0})
     loses: number;
 
+    @OneToMany(type => gameEntity, matchHistory => matchHistory.players.player1)
+    matchHistory: gameEntity[];
 }

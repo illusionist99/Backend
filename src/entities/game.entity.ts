@@ -20,6 +20,19 @@ export class gamePlayers {
 }
 
 @Entity()
+export class score {
+
+    @PrimaryGeneratedColumn()
+    id : number;
+    
+    @Column()
+    player1 : number;
+
+    @Column()
+    player2 : number;
+}
+
+@Entity()
 export class gameEntity {
 
     @PrimaryGeneratedColumn('uuid')
@@ -39,6 +52,9 @@ export class gameEntity {
     @JoinTable()
     chatRoom : ChatRoom; // Public for spectators
 
+    @OneToOne(type => score, gamescore => gamescore.id)
+    @JoinTable()
+    scores: score;
 
 
 }

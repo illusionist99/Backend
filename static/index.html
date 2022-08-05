@@ -110,6 +110,8 @@
             created() { 
                 
                 this.socket = io('http://localhost:3500/');
+                // this.messages = await axios.get
+                
                 this.socket.on('msgToClient', (msg) => {
                     this.receiveMessage(msg);
                 });

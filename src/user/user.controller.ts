@@ -12,27 +12,6 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
 
-  // @Get('friends')
-  // async getFriends(@Request() req) : Promise<friendList[]> {
-  
-  //   return this.userService.getFriends(req);
-  // }
-
-  // @Post('addf')
-  // async sendFriendInvite(@Body() payload: any) : Promise<friendList> {
-
-  //   // const sender : string = payload['sender'];
-  //   // const receiver: string = payload['receiver']
-  //   // return this.userService.sendFriendInvite(sender, payload);
-  // }
-
-  // @Post('fstatus')
-  // async updateFriendStatus(@Request() req, @Body() payload: any) {
-
-  //   return this.userService.UpdateFriendInvite(req.user.uid, payload['status']);
-  // }
-
-
   @Get(':username')
   async getUser(@Param('username') username: string) : Promise<User> {
   

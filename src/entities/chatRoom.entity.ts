@@ -14,7 +14,7 @@ export class ChatRoom {
     type: string;
     
     @ManyToOne(type => User, user => user.uid)
-    owner: User[];
+    owner: string;
     
     @OneToMany(type => ChatMessage, chatMessage => chatMessage.roomId, {cascade: true})
     @JoinTable({
@@ -30,7 +30,7 @@ export class ChatRoom {
 
     @OneToMany(type => User, user => user.uid)
     @JoinTable()
-    admins: User[];
+    admins: string[];
 
     @OneToMany(type => Ban, ban => ban.id)
     @JoinTable()

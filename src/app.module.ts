@@ -12,6 +12,8 @@ import { fortyTwoStrat } from './auth/strategies/fortytwo.strategy';
 import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
 import { friendsRequest } from './entities/friendRequest.entity';
 import { friendsModule } from './friends/friends.module';
+import { GameModule } from './game/game.module';
+import { gameEntity, gamePlayers, score } from './entities/game.entity';
 
 
 console.log(process.env)
@@ -31,13 +33,14 @@ console.log(process.env)
       logging: true,
       subscribers: [],
       migrations: [],
-      entities: [User, ChatMessage, ChatRoom, friendsRequest, Ban],
+      entities: [User, ChatMessage, ChatRoom, friendsRequest, Ban, gameEntity, gamePlayers, score],
       synchronize: true, // to remove when finished 
     }),
     UserModule,
     ChatModule,
     AuthModule,
-    friendsModule
+    friendsModule,
+    GameModule
     ],
   controllers: [fortyTwoStrat, AppController],
   providers: [JwtStartRefresh],

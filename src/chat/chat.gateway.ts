@@ -57,6 +57,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     return this.chatService.createRoom(client.data.user.uid, room);
   }
 
+  
+
   @WebSocketServer()
   private server: Server;
 

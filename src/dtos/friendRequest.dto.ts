@@ -1,10 +1,11 @@
+import { User } from "src/entities/user.entity";
 
 
 export class friendRequestDto {
 
     uid: string;
-    senderUid: string;
-    recieverUid: string;
+    senderUid: User;
+    recieverUid: User;
     date: Date;
     status: boolean;
     blocked: boolean;

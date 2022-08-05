@@ -3,6 +3,7 @@ import { FriendsService } from "./friends.service";
 import { UserService } from "../user/user.service";
 import { friendsRequest } from "src/entities/friendRequest.entity";
 import { jwtRefreshAuthGuard } from "src/auth/guards/jwt.guard";
+import { ChatRoom } from "src/entities/chatRoom.entity";
 
 
 @Controller('friends')
@@ -29,10 +30,18 @@ export class FriendsController {
     async acceptFriendRequest(@Body() payload) : Promise<friendsRequest> {
     
         const uid : string = payload['uid'];
-        const status: boolean = payload['status'];
+        const status: boolean = payload['status'] === true;
 
         if (!uid || !status) throw new ForbiddenException();
         return this.friendsService.UpdateFriendInvite(uid, status);
+    }
+
+    @Get('rooms')
+    async getAllFriendRooms(@Request() req): Promise<ChatRoom[]> {
+
+        const uid: string = req.user.userId;
+        if (!uid) throw new ForbiddenException();
+        return this.friendsService.getAllFriendRooms(uid);
     }
 
     @Post('block')

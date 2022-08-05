@@ -14,10 +14,10 @@ export class createChatRoomDto {
 
     cid: string;
     type: string;
-    owner: User[];
+    owner: string;
     messages: ChatMessage[];
     createdAt: Date;
     name: string;
-    admins: User[];
+    admins: string[];
     banned: Ban[];
 }
