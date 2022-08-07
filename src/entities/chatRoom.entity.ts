@@ -1,5 +1,5 @@
 import { ChatMessage } from "./chatMessage.entity";
-import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 
 
@@ -21,7 +21,7 @@ export class ChatRoom {
     })
     messages: ChatMessage[];
 
-    @Column()
+    @CreateDateColumn()
     createdAt: Date;
 
     @Column({})
@@ -32,30 +32,10 @@ export class ChatRoom {
     @JoinTable()
     admins: string[];
 
-    @OneToMany(type => Ban, ban => ban.id)
+    @OneToMany(type => User, user => user.uid)
     @JoinTable()
-    banned: Ban[];
+    banned: string[];
 
 }
 
 
-
-
-
-@Entity()
-export class Ban {
-
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @OneToOne(type => User, user => user.uid)
-    @JoinTable()
-    banned: User;
-
-    @ManyToOne(type => ChatRoom, chatroom => chatroom.banned)
-    bannedIn: ChatRoom;
-
-    @Column()
-    until: Date;
-
-}

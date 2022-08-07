@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 
 @Entity()
@@ -8,16 +8,13 @@ export class friendsRequest {
     uid: string;
 
 
-    @ManyToOne(type => User, user => user.uid)
-    @JoinTable()
-    senderUid: string;
+    @ManyToOne(type => User, user => user.sentfriendRequests)
+    sender: string;
 
-    @ManyToOne(type => User, user => user.uid)
-    @JoinTable()
-    recieverUid: string;
+    @ManyToOne(type => User, user => user.receivedfriendRequests)
+    reciever: string;
 
-
-    @Column()
+    @CreateDateColumn()
     date: Date;
 
     @Column()

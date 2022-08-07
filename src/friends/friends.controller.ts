@@ -2,12 +2,12 @@ import { Controller, Post, UseGuards, Request, Body, ForbiddenException, Get, Re
 import { FriendsService } from "./friends.service";
 import { UserService } from "../user/user.service";
 import { friendsRequest } from "src/entities/friendRequest.entity";
-import { jwtRefreshAuthGuard } from "src/auth/guards/jwt.guard";
+import { JwtAuthGuard, jwtRefreshAuthGuard } from "src/auth/guards/jwt.guard";
 import { ChatRoom } from "src/entities/chatRoom.entity";
 
 
 @Controller('friends')
-@UseGuards(jwtRefreshAuthGuard)
+@UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
 export class FriendsController {
 
     constructor(private friendsService: FriendsService) {
@@ -22,7 +22,7 @@ export class FriendsController {
         const sender : string = payload['sender'];
         const receiver: string = payload['receiver'];
 
-        if ((!sender || !receiver ) && sender !==  req.user.userId ) throw new ForbiddenException();
+        if ((!sender || !receiver ) && (sender !==  req.user.userId || receiver === sender)) throw new ForbiddenException();
         return this.friendsService.addFriend(sender, receiver);        
     }
 

@@ -5,7 +5,7 @@ import { JwtAuthGuard, jwtRefreshAuthGuard } from './auth/guards/jwt.guard';
 import { LocalGuard } from './auth/guards/local.guard';
 import { User } from './entities/user.entity';
 
-@Controller('')
+@Controller()
 export class AppController {
 
   constructor(private readonly authService: AuthService) {
@@ -43,10 +43,7 @@ export class AppController {
     res.send(401);
     return new ForbiddenException();
   }
- 
 
-  // @Get('auth/refresh')
-  // async refreshToken()
 
   @Post('auth/login')
   @UseGuards(LocalGuard)
@@ -77,7 +74,6 @@ export class AppController {
   logout(@Response({ passthrough: true }) res) {
   
     res.cookie('jwt-rft', {expires: Date.now()}, {httpOnly: true});
-    // this.authService.updateRtHash();
   }
 
   @Post('auth/signup')

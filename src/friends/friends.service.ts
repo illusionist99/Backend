@@ -21,6 +21,8 @@ export class FriendsService {
         @InjectRepository(friendsRequest)
         private friendRequestRepo: Repository<friendsRequest>,
         private chatService: ChatService,
+        @InjectRepository(User)
+        private userRepo : Repository<User>,
     ) {}
 
     async addFriend(sender: string, receiver: string ): Promise<friendsRequest> {
@@ -32,12 +34,11 @@ export class FriendsService {
 
         // if (!rcvUser || !sndUser ) throw new ForbiddenException();
     
-        friendRequest.recieverUid = receiver;
-        friendRequest.senderUid = sender;
+        friendRequest.reciever = receiver;
+        friendRequest.sender = sender;
         friendRequest.status = false;
         friendRequest.date = new Date();
         friendRequest.blocked = false;
-        this.friendRequestRepo.create(friendRequest);
 
 
         const createdRoom : createChatRoomDto = new createChatRoomDto;
@@ -45,10 +46,11 @@ export class FriendsService {
         createdRoom.name = sender + receiver;
         createdRoom.createdAt = new Date();
         createdRoom.owner = sender;
-        createdRoom.banned = [];
+        // createdRoom.banned 
         createdRoom.admins = [sender, receiver];
         createdRoom.type = "private";
         await this.chatService.createRoom(sender, createdRoom);
+        await this.friendRequestRepo.create(friendRequest);
         return await this.friendRequestRepo.save(friendRequest);
     }
 
@@ -58,22 +60,16 @@ export class FriendsService {
         return  this.chatService.findAllRooms(uid);
     }
 
-    async allFriends(userId : string) : Promise<friendsRequest[]> {
+    async allFriends(userId : string) : Promise<any> {
     
-    return await this.friendRequestRepo.find({
-        where: [
-            {
-                status: true,
-                blocked: false,
-                recieverUid: userId ,
-            },
-            {
-                status: true,
-                blocked: false,
-                senderUid: userId,
-            }
-        ]
-        })
+        const user = await this.userRepo.findOne({
+
+            where: { uid: userId },
+            relations: ["sentfriendRequests", "receivedfriendRequests"],
+        });
+
+        // console.log("sent freind requests ", user.sentfriendRequests, user.receivedfriendRequests);
+        return { sent:  user.sentfriendRequests, received:  user.receivedfriendRequests };
     }
 
 

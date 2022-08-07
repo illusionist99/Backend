@@ -11,11 +11,11 @@ export class gamePlayers {
     id: string;
 
     @OneToOne(type => User, user => user.uid)
-    player1: string;
+    player1: User;
 
 
     @OneToOne(type => User, user => user.uid)
-    player2: string;
+    player2: User;
 
 }
 
@@ -26,10 +26,10 @@ export class score {
     id : number;
     
     @Column()
-    player1 : number;
+    score1 : number;
 
     @Column()
-    player2 : number;
+    score2 : number;
 }
 
 @Entity()

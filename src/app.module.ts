@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { ChatMessage } from './entities/chatMessage.entity';
-import { Ban, ChatRoom } from './entities/chatRoom.entity';
+import { ChatRoom } from './entities/chatRoom.entity';
 import { User } from './entities/user.entity';
 import { UserModule } from './user/user.module';
 import { ChatModule } from './chat/chat.module';
@@ -33,7 +33,7 @@ console.log(process.env)
       logging: true,
       subscribers: [],
       migrations: [],
-      entities: [User, ChatMessage, ChatRoom, friendsRequest, Ban, gameEntity, gamePlayers, score],
+      entities: [User, ChatMessage, ChatRoom, friendsRequest, gameEntity, gamePlayers, score],
       synchronize: true, // to remove when finished 
     }),
     UserModule,

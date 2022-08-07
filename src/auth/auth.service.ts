@@ -65,6 +65,7 @@ export class AuthService {
         if (!username || !password) throw new ForbiddenException();
         const user = await this.userService.findByUsername(username);
 
+        if (!user) throw new ForbiddenException();
         const isMatch = await bcrypt.compare(password, user.password);
         if ( user && isMatch) {
             const { password, ...result } = user;

@@ -15,7 +15,7 @@ export  class CreateUserDto {
     refreshToken: string;
     status: string;
     gameXp: number;
-    friends: friendsRequest;
+    friends: friendsRequest[];
     wins: number;
     loses: number;
 }
