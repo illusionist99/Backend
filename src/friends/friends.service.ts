@@ -62,15 +62,26 @@ export class FriendsService {
 
     async allFriends(userId : string) : Promise<any> {
     
-        const user = await this.userRepo.findOne({
+        // const user = await this.userRepo.findOne({
 
-            where: { uid: userId },
-            relations: ["sentfriendRequests", "receivedfriendRequests"],
-        });
+        //     where: { uid: userId },
+        //     relations: ["sentfriendRequests", "receivedfriendRequests"],
+        //     loadEagerRelations: true,
+        // });
 
-        // console.log("sent freind requests ", user.sentfriendRequests, user.receivedfriendRequests);
-        return { sent:  user.sentfriendRequests, received:  user.receivedfriendRequests };
+        const friendList = await (await this.friendRequestRepo.find({ where: { status: true, blocked: false} , relations: ["sender", "reciever"]} ));
+        let result = [];
+        for (var friend of friendList) {
+
+            if (friend.reciever['uid'] === userId || friend.sender['uid'] === userId)
+                result.push(friend);
+        }
+
+        console.log(result);
+
+        return result;
     }
+    
 
 
     async UpdateFriendInvite(uid: string, status: boolean) : Promise<any> {

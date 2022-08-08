@@ -45,11 +45,11 @@ export class User {
     @Column({default: 0})
     gameXp: number;
     
-    @OneToMany(type => friendsRequest, friend => friend.sender, {cascade: true})
+    @OneToMany(type => friendsRequest, friend => friend.sender)
     @JoinTable()
     sentfriendRequests: friendsRequest[];
 
-    @OneToMany(type => friendsRequest, friend => friend.reciever, {cascade: true})
+    @OneToMany(type => friendsRequest, friend => friend.reciever)
     @JoinTable()
     receivedfriendRequests: friendsRequest[];
 

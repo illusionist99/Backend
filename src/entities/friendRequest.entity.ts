@@ -8,10 +8,10 @@ export class friendsRequest {
     uid: string;
 
 
-    @ManyToOne(type => User, user => user.sentfriendRequests)
+    @ManyToOne(type => User, user => user.sentfriendRequests, {cascade: true})
     sender: string;
 
-    @ManyToOne(type => User, user => user.receivedfriendRequests)
+    @ManyToOne(type => User, user => user.receivedfriendRequests, {cascade: true})
     reciever: string;
 
     @CreateDateColumn()
