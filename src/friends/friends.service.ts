@@ -71,7 +71,6 @@ export class FriendsService {
     }
     
 
-
     async UpdateFriendInvite(uid: string, status: boolean) : Promise<any> {
     
       const friendship = await this.friendRequestRepo.findOne({where: {uid}});
