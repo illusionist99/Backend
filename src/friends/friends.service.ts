@@ -60,26 +60,14 @@ export class FriendsService {
         return  this.chatService.findAllRooms(uid);
     }
 
-    async allFriends(userId : string) : Promise<any> {
+    async allFriends(userId : string) : Promise<friendsRequest[]> {
     
-        // const user = await this.userRepo.findOne({
 
-        //     where: { uid: userId },
-        //     relations: ["sentfriendRequests", "receivedfriendRequests"],
-        //     loadEagerRelations: true,
-        // });
+        return  await this.friendRequestRepo.find({
+            where: [{status: true, reciever: userId}, {status: true, sender: userId}], 
+            relations: ["reciever", "sender"]
+        });
 
-        const friendList = await (await this.friendRequestRepo.find({ where: { status: true, blocked: false} , relations: ["sender", "reciever"]} ));
-        let result = [];
-        for (var friend of friendList) {
-
-            if (friend.reciever['uid'] === userId || friend.sender['uid'] === userId)
-                result.push(friend);
-        }
-
-        console.log(result);
-
-        return result;
     }
     
 

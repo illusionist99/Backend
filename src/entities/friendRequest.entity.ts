@@ -1,17 +1,22 @@
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 
+
+
+
+
 @Entity()
 export class friendsRequest {
 
     @PrimaryGeneratedColumn('uuid')
     uid: string;
 
-
-    @ManyToOne(type => User, user => user.sentfriendRequests, {cascade: true})
+    @Column()
+    @ManyToOne(() => User, user => user.sntF)
     sender: string;
 
-    @ManyToOne(type => User, user => user.receivedfriendRequests, {cascade: true})
+    @Column()
+    @ManyToOne(() => User, user => user.recF)
     reciever: string;
 
     @CreateDateColumn()

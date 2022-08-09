@@ -1,10 +1,8 @@
-import { Entity, Exclusion, JoinTable, OneToOne } from "typeorm";
-import { PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { ChatRoom } from './chatRoom.entity';
-import { friendsRequest } from "./friendRequest.entity";
-// import { gameEntity } from "./game.entity";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { FriendRequest } from "./friend.entity";
+import { Room } from "./room.entity";
 
-@Entity()
+@Entity('user')
 export class User {
 
     @PrimaryGeneratedColumn('uuid')
@@ -31,27 +29,29 @@ export class User {
     @Column({ unique: true, nullable: true })
     email: string;
 
-    @OneToMany(type => ChatRoom, chatroom => chatroom.owner, {cascade: true})
-    @JoinTable({})
-    chatRooms: ChatRoom[];
 
-    
+    // ROOMS AVAILABLE 
+    @OneToMany(() => Room, room => room.ownerID)
+    @JoinColumn()
+    rooms: Room[]
+
     @Column()
     refreshToken: string;
-    
+
     @Column({default: 'offline'})
     status: string;
 
     @Column({default: 0})
     gameXp: number;
-    
-    @OneToMany(type => friendsRequest, friend => friend.sender)
-    @JoinTable()
-    sntF: friendsRequest[];
 
-    @OneToMany(type => friendsRequest, friend => friend.reciever)
-    @JoinTable()
-    recF: friendsRequest[];
+    // FRIEND LIST
+    @OneToMany(() => FriendRequest, friendRequest => friendRequest.sender)
+    @JoinColumn()
+    sentF: FriendRequest[];
+
+    @OneToMany(() => FriendRequest, friendRequest => friendRequest.receiver)
+    @JoinColumn()
+    receF: FriendRequest[];
 
     @Column({default: 0})
     wins: number;
@@ -61,9 +61,5 @@ export class User {
 
     // @OneToMany(type => gameEntity, matchHistory => matchHistory.players.player1)
     // matchHistory: gameEntity[];
+
 }
-
-
-
-
-

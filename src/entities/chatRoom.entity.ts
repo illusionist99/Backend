@@ -13,10 +13,10 @@ export class ChatRoom {
     @Column()
     type: string;
     
-    @ManyToOne(type => User, user => user.uid)
+    @ManyToOne(() => User, user => user.uid)
     owner: string;
     
-    @OneToMany(type => ChatMessage, chatMessage => chatMessage.roomId, {cascade: true})
+    @OneToMany(() => ChatMessage, chatMessage => chatMessage.roomId, {cascade: true})
     @JoinTable({
     })
     messages: ChatMessage[];
@@ -28,11 +28,11 @@ export class ChatRoom {
     name: string;
 
 
-    @OneToMany(type => User, user => user.uid)
+    @OneToMany(() => User, user => user.uid)
     @JoinTable()
     admins: string[];
 
-    @OneToMany(type => User, user => user.uid)
+    @OneToMany(() => User, user => user.uid)
     @JoinTable()
     banned: string[];
 
