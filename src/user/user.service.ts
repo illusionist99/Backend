@@ -24,11 +24,13 @@ export class UserService {
       return users;
     }
 
-    async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
+    async updateAvatar(uid: string , avatar: Express.Multer.File) {
 
       const user = await  this.findOne(uid);
-
+      console.log(avatar.buffer)
+      if (!avatar.buffer) throw new Error("Can't Update User Avatar");
       if (!user) throw new ForbiddenException();
+      // if (nickname === user.nickname)
 
       return  await this.userRepo.update(user.uid, {picture: avatar.buffer});
     }

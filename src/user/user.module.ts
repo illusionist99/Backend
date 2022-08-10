@@ -9,7 +9,13 @@ import { friendsRequest } from 'src/entities/friendRequest.entity';
 
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, friendsRequest]), MulterModule.register()],
+  imports: [TypeOrmModule.forFeature([User, friendsRequest]), MulterModule.register(),
+  //  MulterModule.registerAsync({
+  //   useFactory: () => ({
+  //     dest: './upload',
+  //   })
+  // })
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

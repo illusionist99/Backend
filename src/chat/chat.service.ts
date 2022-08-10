@@ -36,8 +36,8 @@ export class ChatService {
 
 
     if (createChatRoom.type === "protected" && !createChatRoom.password) throw new ForbiddenException();
-
-    createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
+    else if ( createChatRoom.type === "protected" && createChatRoom.password)
+      createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
     this.chatRoomRepo.create(createChatRoom);
     return  await this.chatRoomRepo.save(createChatRoom);
   }

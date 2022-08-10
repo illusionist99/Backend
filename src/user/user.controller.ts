@@ -11,8 +11,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   
-  @Get('search')
-  async searchUsers(@Query('s') searchParam: string) : Promise<User[]> {
+  @Get('search/:query') // better way of retreiving data + protect username Route
+  async searchUsers(@Param('query') searchParam: string) : Promise<User[]> {
     
     console.log("Query string received : ", searchParam);
     if (!searchParam) throw new ForbiddenException();;
@@ -32,10 +32,12 @@ export class UserController {
     return this.userService.findOne(req.user.userId);
   }
 
-  @Post(':id/avatar')
+  @Post(':id/avatar') // update avatar
   @UseInterceptors(FileInterceptor('file'))
   async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File)  {
   
+    // if (!newNickName) throw new ForbiddenException 
+    console.log('file is :', file);
     return this.userService.updateAvatar(uid, file);
   }
 
