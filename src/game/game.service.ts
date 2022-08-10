@@ -49,11 +49,11 @@ export class GameService {
   }
 
   async getAllGames(): Promise<Game[]> {
-    return this.gameRepo.find({ relations: ['playerOne', 'playerTwo'] });
+    return this.gameRepo.find();
   }
-  async getUserGameHistory(userId: string): Promise<Game[]> {
+  async getUserGameHistory(userId: string): Promise<any[]> {
     return this.gameRepo.find({
-      relations: ['playerOne', 'playerTwo'],
+      // relations: ['playerOne', 'playerTwo'],
       where: [
         { playerOne: userId, status: 1 },
         { playerTwo: userId, status: 1 },
@@ -61,9 +61,21 @@ export class GameService {
       order: {
         id: 'DESC',
       },
+    }).then(async (games)=>{
+
+      let g = await Promise.all(
+        games.map(async (g)=>{
+          return {
+            ...g, 
+            playerOne: await this.userService.findById(g.playerOne),
+            playerTwo: await this.userService.findById(g.playerTwo)
+          }
+        })
+      );
+      return g;
     });
   }
-  async getUserCurrentGame(userId: string): Promise<Game[]> {
+  async getUserCurrentGame(userId: string) : Promise<Game[]> {
     return this.gameRepo.find({
       where: [
         { playerOne: userId, status: 0 },

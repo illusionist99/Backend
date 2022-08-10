@@ -14,13 +14,13 @@ export class Game {
   mode: 'classic' | 'doublepaddle' | 'goalkeeper';
 
   @Column({ nullable: false })
-  @OneToOne(() => User, (user) => user.uid, { cascade: true })
-  @JoinColumn()
+  // @OneToMany(() => User, (user) => user.uid, { cascade: true })
+  // @JoinTable()
   playerOne: string;
 
   @Column({ nullable: false })
-  @OneToOne(() => User, (user) => user.uid, { cascade: true })
-  @JoinColumn()
+  // @OneToMany(() => User, (user) => user.uid, { cascade: true })
+  // @JoinTable()
   playerTwo: string;
 
   @Column({ nullable: false })
