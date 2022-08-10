@@ -26,7 +26,7 @@ export class UserController {
   @Get('search/:query') // better way of retreiving data + protect username Route
   async searchUsers(@Param('query') searchParam: string): Promise<User[]> {
     console.log('Query string received : ', searchParam);
-    if (!searchParam) throw new ForbiddenException();
+    //if (!searchParam) throw new ForbiddenException();
     return this.userService.searchUsers(searchParam);
   }
 

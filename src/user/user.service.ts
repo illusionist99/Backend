@@ -20,9 +20,9 @@ export class UserService {
 
   async searchUsers(searchParam: string): Promise<User[]> {
     const users: User[] = await this.userRepo
-      .createQueryBuilder('user')
-      .where('user.username LIKE :s', { s: `%${searchParam}%` })
-      .getMany();
+        .createQueryBuilder('user')
+        .where('user.username LIKE :s', { s: `%${searchParam}%` })
+        .getMany();
     console.log(' users : ', users);
     return users;
   }
