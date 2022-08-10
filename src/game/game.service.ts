@@ -24,6 +24,7 @@ export class GameService {
   }
   async updateGame(gameId: string, dto: UpdateGameDto): Promise<Game> {
     let game = await this.gameRepo.findOne({ where: { gameId } });
+    if (!game) return;
     if (game.status === 1) return game;
     game = { ...game, ...dto };
 

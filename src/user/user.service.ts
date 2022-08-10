@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
-import { updateUserDto } from '../entities/update.user';
+import { UpdateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -17,6 +17,15 @@ export class UserService {
     @InjectRepository(User)
     private userRepo: Repository<User>,
   ) {}
+
+  async searchUsers(searchParam: string): Promise<User[]> {
+    const users: User[] = await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.username LIKE :s', { s: `%${searchParam}%` })
+      .getMany();
+    console.log(' users : ', users);
+    return users;
+  }
 
   async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
     const user = await this.findOne(uid);
@@ -29,7 +38,7 @@ export class UserService {
   async createLocal(username: string, password: string): Promise<User> {
     // 'This action adds a new user';
 
-    let newUser = new CreateUserDto();
+    const newUser = new CreateUserDto();
 
     newUser.username = username;
     newUser.nickname = username;
@@ -95,7 +104,7 @@ export class UserService {
     return null;
   }
 
-  async update(id: string, updateUserDto: updateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.userRepo.find({
       where: {
         uid: id,

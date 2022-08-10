@@ -1,7 +1,7 @@
 import { ChatMessage } from "./chatMessage.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
-
+import { createChatRoomDto, roomType } from "src/dtos/chatRoom.dto";
 
 
 @Entity()
@@ -11,8 +11,9 @@ export class ChatRoom {
     cid: string;
 
     @Column()
-    type: string;
+    type: roomType;
     
+    @Column()
     @ManyToOne(() => User, user => user.uid)
     owner: string;
     
@@ -24,9 +25,13 @@ export class ChatRoom {
     @CreateDateColumn()
     createdAt: Date;
 
-    @Column({})
+    @Column({ unique: true, nullable: true})
     name: string;
 
+    @Column(
+        { nullable: true }
+    )
+    password: string;
 
     @OneToMany(() => User, user => user.uid)
     @JoinTable()
