@@ -13,10 +13,9 @@ import { JwtStartRefresh } from './auth/strategies/jwtRefresh.strategy';
 import { friendsRequest } from './entities/friendRequest.entity';
 import { friendsModule } from './friends/friends.module';
 import { GameModule } from './game/game.module';
-import { gameEntity, gamePlayers, score } from './entities/game.entity';
+import { Game } from './entities/game.entity';
 
-
-console.log(process.env)
+console.log(process.env);
 
 @Module({
   imports: [
@@ -24,7 +23,7 @@ console.log(process.env)
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: "postgres",
+      type: 'postgres',
       host: process.env.POSTGRES_HOST,
       port: parseInt(process.env.POSTGRES_PORT),
       username: process.env.POSTGRES_USER,
@@ -33,15 +32,15 @@ console.log(process.env)
       logging: true,
       subscribers: [],
       migrations: [],
-      entities: [User, ChatMessage, ChatRoom, friendsRequest, gameEntity, gamePlayers, score],
-      synchronize: true, // to remove when finished 
+      entities: [User, ChatMessage, ChatRoom, friendsRequest, Game],
+      synchronize: true, // to remove when finished
     }),
     UserModule,
     ChatModule,
     AuthModule,
     friendsModule,
-    GameModule
-    ],
+    GameModule,
+  ],
   controllers: [fortyTwoStrat, AppController],
   providers: [JwtStartRefresh],
 })
