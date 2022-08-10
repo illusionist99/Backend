@@ -43,13 +43,13 @@ export class FriendsService {
 
         const createdRoom : createChatRoomDto = new createChatRoomDto;
 
-        createdRoom.name = sender + receiver;
+        createdRoom.name = null;
         createdRoom.createdAt = new Date();
         createdRoom.owner = sender;
         // createdRoom.banned 
         createdRoom.admins = [sender, receiver];
         createdRoom.type = "private";
-        await this.chatService.createRoom(sender, createdRoom);
+        await this.chatService.createRoom(createdRoom);
         await this.friendRequestRepo.create(friendRequest);
         return await this.friendRequestRepo.save(friendRequest);
     }

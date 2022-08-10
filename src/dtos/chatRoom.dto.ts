@@ -10,14 +10,19 @@ export class BanDto {
     until: Date;
 }
 
+export type roomType  = "private" | "public" | "protected";
+
+
+
 export class createChatRoomDto {
 
     cid: string;
-    type: string;
+    type: roomType;
     owner: string;
     messages: ChatMessage[];
     createdAt: Date;
     name: string;
+    password: string;
     admins: string[];
     banned: string[];
 }

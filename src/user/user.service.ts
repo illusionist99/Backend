@@ -2,7 +2,6 @@ import { Body, ForbiddenException, Injectable, UploadedFile } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
-import { updateUserDto } from '../entities/update.user'
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -17,7 +16,13 @@ export class UserService {
 
     ) {}
 
+    async searchUsers(searchParam: string) : Promise<User[]> {
+    
 
+      const users: User[] = await this.userRepo.createQueryBuilder('user').where("user.username LIKE :s", { s: `%${searchParam}%` }).getMany();
+      console.log(" users : " , users);
+      return users;
+    }
 
     async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
 
@@ -101,15 +106,6 @@ export class UserService {
     return null;
   }
 
-  async update(id: string, updateUserDto: updateUserDto) {
-  
-    const user = await this.userRepo.find({where: {
-      uid: id,
-    }})
-
-    let updated = Object.assign(updateUserDto, user);
-    return await this.userRepo.save(updated);
-  }
 
   async updateRt(uid: string, hash: string) {
   

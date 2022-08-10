@@ -28,15 +28,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
   
-    console.log('usre Logged Out ', client.data.user);
-    console.log('Disconnected : ', client.data);
+    console.log('user Logged Out ', client.data.user);
+    // console.log('Disconnected : ', client.data);
 
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
 
-    console.log('Logged in user ', client.data);
-    console.log('Connected ', client.id);
+    console.log('Logged in user ', client.data.user);
+    // console.log('Connected ', client.id);
   }
 
 
@@ -54,7 +54,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     room.name = roomName;
     room.type = "public";
     this.server.emit("RoomCreated", roomName);
-    return this.chatService.createRoom(client.data.user.uid, room);
+    return this.chatService.createRoom(room);
   }
 
   

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
@@ -7,7 +7,7 @@ import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 // import { UpdateChatDto } from '../dtos/';
-
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class ChatService {
@@ -32,10 +32,13 @@ export class ChatService {
 
   }
 
-  async createRoom(uid: string, createChatRoom : createChatRoomDto) : Promise<createChatRoomDto> {
+  async createRoom(createChatRoom : createChatRoomDto) : Promise<createChatRoomDto> {
 
+
+    if (createChatRoom.type === "protected" && !createChatRoom.password) throw new ForbiddenException();
+
+    createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
     this.chatRoomRepo.create(createChatRoom);
-
     return  await this.chatRoomRepo.save(createChatRoom);
   }
  

@@ -10,12 +10,13 @@ export class gamePlayers {
     @PrimaryGeneratedColumn()
     id: string;
 
+    @Column()
     @OneToOne(type => User, user => user.uid)
-    player1: User;
+    player1: string;
 
-
+    @Column()
     @OneToOne(type => User, user => user.uid)
-    player2: User;
+    player2: string;
 
 }
 
