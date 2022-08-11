@@ -1,3 +1,4 @@
+import { base32Encode } from 'base32-encode';
 import { Entity, Exclusion, JoinTable, OneToOne } from 'typeorm';
 import { PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ChatRoom } from './chatRoom.entity';
@@ -24,7 +25,7 @@ export class User {
   @Column({ unique: true })
   username: string;
 
-  @Column({ select: false })
+  @Column({ })
   password: string;
 
   @Column({ unique: true, nullable: true })
@@ -62,6 +63,12 @@ export class User {
   @Column({ default: 0 })
   losses: number;
 
+  @Column({ type: 'bytea' , nullable: true })
+  tfaSecret: string; // tfa string
+
+
+  @Column({ default: false })
+  tfaEnabled: boolean;
   // @OneToMany(type => gameEntity, matchHistory => matchHistory.players.player1)
   // matchHistory: gameEntity[];
 }

@@ -28,14 +28,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
   
-    console.log('user Logged Out ', client.data.user);
+    console.log('user Logged Out ', client.data);
+
+    // update status 
     // console.log('Disconnected : ', client.data);
 
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
 
-    console.log('Logged in user ', client.data.user);
+    console.log('Logged in user ', client.data);
     // console.log('Connected ', client.id);
   }
 
@@ -49,7 +51,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     let room : ChatRoom = new createChatRoomDto();
 
     console.log(client.data.user.uid);
-    room.createdAt = new Date();  
     room.owner = client.data.user.uid;
     room.name = roomName;
     room.type = "public";
@@ -75,7 +76,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     if (!roomO) throw new WsException("Error"); 
     chatMessage.roomId = roomO;
     chatMessage.text = message['message'];
-    chatMessage.createdAt = new Date();
     this.server.to(message['room']).emit('msgToClient', {username: client.data.user.nickname, message: message['message']});
     return  this.chatService.create(chatMessage);
   }
@@ -121,7 +121,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     chatMessage.ownerId = client.data.user.uid;
     chatMessage.roomId = body[1];
     chatMessage.text = body[0];
-    chatMessage.createdAt = new Date();
 
     this.server.to(body[0]).emit('msgToClientifRoom', body[1]);
     return  this.chatService.create(chatMessage);

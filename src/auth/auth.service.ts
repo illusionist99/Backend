@@ -14,6 +14,9 @@ import axios from 'axios';
 import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
+import * as base32 from 'base32-ts'
+import { toDataURL } from 'qrcode';
+
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,44 @@ export class AuthService {
     private userService: UserService,
     private readonly configService: ConfigService,
   ) {}
+
+
+  async loginWith2fa(user: User) {
+
+  
+    const payload = { username: user.username, sub: user.uid, tfa: true};
+
+    console.log('new payload ', payload);
+    return {
+      access_token: await this.jwtService.signAsync(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXP_H,
+      }),
+      refreshToken: await this.jwtService.signAsync(payload, {
+        secret: process.env.RFH_SECRET,
+        expiresIn: process.env.RFH_EXP_D,
+      }),
+    };
+  }
+
+  async setupMfa( userId : string ) {
+  
+    const user : User = await  this.userService.findById(userId);
+    if (!user) throw new ForbiddenException();
+
+    await this.userService.EnableTfa(userId);
+    return  await  this.userService.generateTFAsecret(user);
+  }
+
+  async ValidateTfa(code: string, secret: string) {
+
+    return this.userService.ValidateTfa(code, secret);
+  }
+
+  async generateQrCode(otpauthUrl: string) {
+
+    return toDataURL(otpauthUrl);
+  }
 
   async refreshToken(
     @Request() req,

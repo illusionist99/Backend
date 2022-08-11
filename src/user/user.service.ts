@@ -11,6 +11,8 @@ import { UpdateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
+import * as otplib from "otplib";
+import { authenticator } from 'otplib';
 
 @Injectable()
 export class UserService {
@@ -21,6 +23,52 @@ export class UserService {
   }
 
   public lvlFactor : number = 40;
+
+
+
+   async ValidateTfa(code: string, secret: string) : Promise<Boolean>  {
+    
+    console.log('validatinng ', code, secret);
+    return   authenticator.verify({token: code, secret});
+   }
+
+
+  async EnableTfa(uid: string) {
+
+    const user = await this.userRepo.findOne({ where: { uid } });
+
+    if (!user) throw new ForbiddenException();
+
+    return await this.userRepo.update(user.uid, {
+      tfaEnabled: true,
+    });
+  }
+
+  async generateTFAsecret(user: User) {
+
+    const secret  = otplib.authenticator.generateSecret();
+
+    const otpauthUrl = otplib.authenticator.keyuri(user.email, "Coolest Pong", secret);
+
+    this.updateMfaKey(user.uid, secret);
+
+    return {
+      secret,
+      otpauthUrl
+    }
+  }
+
+
+  async updateMfaKey(uid: string, secret : string) {
+
+    const user = await this.userRepo.findOne({ where: { uid } });
+
+    if (!user) throw new ForbiddenException();
+
+    return this.userRepo.update(user.uid, {
+      tfaSecret: secret,
+    });
+  }
 
   async searchUsers(searchParam: string): Promise<User[]> {
     const users: User[] = await this.userRepo

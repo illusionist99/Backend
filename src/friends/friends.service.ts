@@ -29,12 +29,13 @@ export class FriendsService {
   ) {}
 
   async addFriend(sender: string, receiver: string): Promise<friendsRequest> {
-    const friendRequest: friendsRequest = new friendsRequest();
-
+    
     // const rcvUser : User = await this.userService.findById(receiver);
     // const sndUser : User = await this.userService.findById(sender);
-
+    
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
+   
+    const friendRequest: friendsRequest = new friendsRequest();
 
     friendRequest.reciever = receiver;
     friendRequest.sender = sender;
@@ -47,11 +48,12 @@ export class FriendsService {
     createdRoom.name = null;
     createdRoom.createdAt = new Date();
     createdRoom.owner = sender;
-    // createdRoom.banned
     createdRoom.admins = [sender, receiver];
     createdRoom.type = 'private';
+
+
     await this.chatService.createRoom(createdRoom);
-    await this.friendRequestRepo.create(friendRequest);
+    this.friendRequestRepo.create(friendRequest);
     return await this.friendRequestRepo.save(friendRequest);
   }
 
