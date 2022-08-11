@@ -22,6 +22,6 @@ export class JwtStartegy extends PassportStrategy(Strategy, 'jwt' ) {
 
     async validate(payload : any) {
 
-        return { userId: payload.sub, username: payload.username, tfaEnabled: payload.tfaEnabled };
+        return { userId: payload.sub, username: payload.username, tfaEnabled: payload.tfaEnabled, tfaAuth: payload.tfaAuth };
     }
 }

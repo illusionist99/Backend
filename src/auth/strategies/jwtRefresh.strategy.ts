@@ -32,6 +32,6 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh' ) {
 
     async validate(payload : any) {
 
-        return { userId: payload.sub, username: payload.username };
+        return { userId: payload.sub, username: payload.username, tfaEnabled: payload.tfaEnabled, tfaAuth: payload.tfaAuth };
     }
 }

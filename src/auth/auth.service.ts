@@ -68,6 +68,9 @@ export class AuthService {
     @Request() req,
     @Response({ passthrough: true }) res,
   ): Promise<any> {
+
+
+    
     const refreshToken = req?.cookies['jwt-rft'];
 
     if (!refreshToken) throw new BadRequestException();

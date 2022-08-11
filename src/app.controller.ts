@@ -112,10 +112,11 @@ export class AppController {
   @Post('auth/login')
   @UseGuards(LocalGuard)
   async login(@Request() req, @Response({ passthrough: true }) res) {
+  
     const payload = await this.authService.getTokens(
       req.user.uid,
       req.user.username,
-      req.user.tfaEnabled
+      req.user.tfaEnabled,
     );
       console.log(payload);
     if (payload) {
