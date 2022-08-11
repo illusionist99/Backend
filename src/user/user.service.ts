@@ -5,7 +5,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, TreeLevelColumn } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
 import { UpdateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
@@ -16,7 +16,10 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) {
+  }
+
+  public lvlFactor : number = 40;
 
   async searchUsers(searchParam: string): Promise<User[]> {
     const users: User[] = await this.userRepo
@@ -73,7 +76,7 @@ export class UserService {
   //    const user = await this.user
   //   return await this.userRepo.find();
   // }
-
+  
   async findOne(id: string): Promise<User> {
     // `This action returns a #${id} user`;
 
@@ -82,7 +85,7 @@ export class UserService {
     delete user.password;
     delete user.refreshToken;
 
-    if (user) return user;
+    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp)};
     return null;
   }
 
@@ -91,7 +94,7 @@ export class UserService {
 
     const user = await this.userRepo.findOne({ where: { username } });
 
-    if (user) return user;
+    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp) };
     return null;
   }
 
@@ -100,7 +103,7 @@ export class UserService {
 
     const user = await this.userRepo.findOne({ where: { uid } });
 
-    if (user) return user;
+    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp)};
     return null;
   }
 
@@ -159,9 +162,30 @@ export class UserService {
   }
   async incrementXp(id: string, amount: number) {
     let user = await this.userRepo.findOne({ where: { uid: id } });
+
+
+    // await this.incrementLevel(winner);
     user = { ...user, xp: user.xp + amount };
+
     console.log('incrementing xp');
 
+    let lvlFactor = this.lvlFactor 
+
+    let xpNeededForLevel = user.level * lvlFactor;
+    let TotalXpNeeded = (user.level * (user.level + 1) / 2) * lvlFactor // lvl 4 / xpneededforlevel = 400 / currentxp = 440
+    let currentXp = user.xp;
+
+    console.log({xpNeededForLevel, TotalXpNeeded, currentXp})
+
+    while (currentXp >= TotalXpNeeded)
+    {
+      user.level++;
+
+      xpNeededForLevel = user.level * lvlFactor;
+      TotalXpNeeded = (user.level * (user.level + 1) / 2) * lvlFactor // lvl 4 / xpneededforlevel = 400 / currentxp = 440
+      currentXp = user.xp;
+      console.log("level Up ")
+    }
     return this.userRepo.save(user);
   }
   async incrementLevel(id: string) {
