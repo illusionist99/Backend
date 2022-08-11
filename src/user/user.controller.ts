@@ -12,6 +12,9 @@ import {
   UploadedFile,
   Query,
   ForbiddenException,
+  NotFoundException,
+  Req,
+  Inject,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -31,8 +34,27 @@ export class UserController {
   }
 
   @Get(':username')
-  async getUser(@Param('username') username: string): Promise<User> {
-    return this.userService.findByUsername(username);
+  async getUser(@Param('username') username: string, @Req() req): Promise<any> {
+    const user: User = await this.userService.findByUsername(username);
+    if (!user) throw new NotFoundException();
+    const me = req.user.userId;
+    let rule;
+    if (me === user.uid) rule = 'me';
+    else {
+      const r = await this.userService.findOneFriendRequest(me, user.uid);
+      if (r) {
+        if (r.status) {
+          rule = 'friends';
+        } else if (user.uid === r.sender) {
+          rule = 'sender';
+        } else {
+          rule = 'receiver';
+        }
+      } else {
+        rule = 'none';
+      }
+    }
+    return { ...user, rule };
   }
 
   @Get()
@@ -46,8 +68,6 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-
-
   @Post(':id/avatar') // update avatar
   @UseInterceptors(FileInterceptor('file'))
   async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
@@ -55,8 +75,6 @@ export class UserController {
     console.log('file is :', file);
     return this.userService.updateAvatar(uid, file);
   }
-
-
 
   @Delete(':id')
   remove(@Param('id') id: string) {

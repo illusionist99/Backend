@@ -2,6 +2,7 @@ import {
   Body,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UploadedFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,30 +12,42 @@ import { UpdateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
-import * as otplib from "otplib";
+import * as otplib from 'otplib';
 import { authenticator } from 'otplib';
+import { friendsRequest } from 'src/entities/friendRequest.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {
+    @InjectRepository(friendsRequest)
+    private friendRepo: Repository<friendsRequest>,
+  ) {}
+
+  public lvlFactor: number = 40;
+
+  async findOneFriendRequest(sender: string, receiver: string) {
+    return await this.friendRepo.findOne({
+      where: [
+        {
+          sender,
+          receiver,
+        },
+        {
+          sender: receiver,
+          receiver: sender,
+        },
+      ],
+    });
   }
 
-  public lvlFactor : number = 40;
-
-
-
-   async ValidateTfa(code: string, secret: string) : Promise<Boolean>  {
-    
+  async ValidateTfa(code: string, secret: string): Promise<Boolean> {
     console.log('validatinng ', code, secret);
-    return   authenticator.verify({token: code, secret});
-   }
-
+    return authenticator.verify({ token: code, secret });
+  }
 
   async EnableTfa(uid: string) {
-
     const user = await this.userRepo.findOne({ where: { uid } });
 
     if (!user) throw new ForbiddenException();
@@ -45,22 +58,23 @@ export class UserService {
   }
 
   async generateTFAsecret(user: User) {
+    const secret = otplib.authenticator.generateSecret();
 
-    const secret  = otplib.authenticator.generateSecret();
-
-    const otpauthUrl = otplib.authenticator.keyuri(user.email, "Coolest Pong", secret);
+    const otpauthUrl = otplib.authenticator.keyuri(
+      user.email,
+      'Coolest Pong',
+      secret,
+    );
 
     this.updateMfaKey(user.uid, secret);
 
     return {
       secret,
-      otpauthUrl
-    }
+      otpauthUrl,
+    };
   }
 
-
-  async updateMfaKey(uid: string, secret : string) {
-
+  async updateMfaKey(uid: string, secret: string) {
     const user = await this.userRepo.findOne({ where: { uid } });
 
     if (!user) throw new ForbiddenException();
@@ -72,9 +86,9 @@ export class UserService {
 
   async searchUsers(searchParam: string): Promise<User[]> {
     const users: User[] = await this.userRepo
-        .createQueryBuilder('user')
-        .where('user.username LIKE :s', { s: `%${searchParam}%` })
-        .getMany();
+      .createQueryBuilder('user')
+      .where('user.username LIKE :s', { s: `%${searchParam}%` })
+      .getMany();
     console.log(' users : ', users);
     return users;
   }
@@ -125,7 +139,7 @@ export class UserService {
   //    const user = await this.user
   //   return await this.userRepo.find();
   // }
-  
+
   async findOne(id: string): Promise<User> {
     // `This action returns a #${id} user`;
 
@@ -134,7 +148,13 @@ export class UserService {
     delete user.password;
     delete user.refreshToken;
 
-    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp)};
+    if (user)
+      return {
+        ...user,
+        xp:
+          user.level * this.lvlFactor -
+          (((user.level * (user.level + 1)) / 2) * this.lvlFactor - user.xp),
+      };
     return null;
   }
 
@@ -142,8 +162,14 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { username } });
-
-    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp) };
+    if (user) {
+      return {
+        ...user,
+        xp:
+          user.level * this.lvlFactor -
+          (((user.level * (user.level + 1)) / 2) * this.lvlFactor - user.xp),
+      };
+    }
     return null;
   }
 
@@ -152,7 +178,13 @@ export class UserService {
 
     const user = await this.userRepo.findOne({ where: { uid } });
 
-    if (user) return {...user, xp: user.level*this.lvlFactor-(((user.level * (user.level + 1) / 2) * this.lvlFactor) - user.xp)};
+    if (user)
+      return {
+        ...user,
+        xp:
+          user.level * this.lvlFactor -
+          (((user.level * (user.level + 1)) / 2) * this.lvlFactor - user.xp),
+      };
     return null;
   }
 
@@ -212,28 +244,26 @@ export class UserService {
   async incrementXp(id: string, amount: number) {
     let user = await this.userRepo.findOne({ where: { uid: id } });
 
-
     // await this.incrementLevel(winner);
     user = { ...user, xp: user.xp + amount };
 
     console.log('incrementing xp');
 
-    let lvlFactor = this.lvlFactor 
+    let lvlFactor = this.lvlFactor;
 
     let xpNeededForLevel = user.level * lvlFactor;
-    let TotalXpNeeded = (user.level * (user.level + 1) / 2) * lvlFactor // lvl 4 / xpneededforlevel = 400 / currentxp = 440
+    let TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
     let currentXp = user.xp;
 
-    console.log({xpNeededForLevel, TotalXpNeeded, currentXp})
+    console.log({ xpNeededForLevel, TotalXpNeeded, currentXp });
 
-    while (currentXp >= TotalXpNeeded)
-    {
+    while (currentXp >= TotalXpNeeded) {
       user.level++;
 
       xpNeededForLevel = user.level * lvlFactor;
-      TotalXpNeeded = (user.level * (user.level + 1) / 2) * lvlFactor // lvl 4 / xpneededforlevel = 400 / currentxp = 440
+      TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
       currentXp = user.xp;
-      console.log("level Up ")
+      console.log('level Up ');
     }
     return this.userRepo.save(user);
   }
@@ -245,7 +275,9 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
-  async leaderboard(){
-    return this.userRepo.find().then((e)=>e.sort((a,b)=>b.level-a.level));
+  async leaderboard() {
+    return this.userRepo
+      .find()
+      .then((e) => e.sort((a, b) => b.level - a.level));
   }
 }

@@ -25,7 +25,7 @@ export class User {
   @Column({ unique: true })
   username: string;
 
-  @Column({ })
+  @Column({})
   password: string;
 
   @Column({ unique: true, nullable: true })
@@ -37,7 +37,7 @@ export class User {
   @JoinTable({})
   chatRooms: ChatRoom[];
 
-  @Column({ })
+  @Column({})
   refreshToken: string;
 
   @Column({ default: 'offline' })
@@ -53,7 +53,7 @@ export class User {
   @JoinTable()
   sntF: friendsRequest[];
 
-  @OneToMany((type) => friendsRequest, (friend) => friend.reciever)
+  @OneToMany((type) => friendsRequest, (friend) => friend.receiver)
   @JoinTable()
   recF: friendsRequest[];
 
@@ -63,9 +63,8 @@ export class User {
   @Column({ default: 0 })
   losses: number;
 
-  @Column({ type: 'bytea' , nullable: true })
+  @Column({ type: 'bytea', nullable: true })
   tfaSecret: string; // tfa string
-
 
   @Column({ default: false })
   tfaEnabled: boolean;
