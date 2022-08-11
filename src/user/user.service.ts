@@ -197,6 +197,6 @@ export class UserService {
   }
 
   async leaderboard(){
-    return this.userRepo.find().then((e)=>e.sort((a,b)=>a.level-b.level));
+    return this.userRepo.find().then((e)=>e.sort((a,b)=>b.level-a.level));
   }
 }
