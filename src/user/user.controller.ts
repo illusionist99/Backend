@@ -26,8 +26,8 @@ import { User } from 'src/entities/user.entity';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('search/:query') // better way of retreiving data + protect username Route
-  async searchUsers(@Param('query') searchParam: string): Promise<User[]> {
+  @Get('search') // better way of retreiving data + protect username Route
+  async searchUsers(@Query('query') searchParam: string): Promise<User[]> {
     console.log('Query string received : ', searchParam);
     //if (!searchParam) throw new ForbiddenException();
     return this.userService.searchUsers(searchParam);

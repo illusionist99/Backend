@@ -90,7 +90,13 @@ export class UserService {
       .where('user.username LIKE :s', { s: `%${searchParam}%` })
       .getMany();
     console.log(' users : ', users);
+    if (users.length !== 0)
     return users;
+
+    console.log('procceding to get random users if any ');
+    const defaults : User[] = (await this.userRepo.find({take: 10})).sort();
+
+    return defaults;
   }
 
   async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
