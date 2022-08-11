@@ -5,7 +5,7 @@ import { GameService } from './game.service';
 
 @Controller('game')
 export class GameController {
-  constructor(private readonly gameService: GameService) {}
+  constructor(private readonly gameService: GameService, private readonly userService: UserService) {}
 
   // @Post()
   // createLocal(@Body() localgame: JSON) {
@@ -40,7 +40,10 @@ export class GameController {
   getUserCurrentGame(@Param("id") id: string) {
     return this.gameService.getUserCurrentGame(id);
   }
-
+  @Get("leaderboard/")
+  leaderboard(@Request() req) {
+    return this.userService.leaderboard();
+  }
   // // @UseGuards(isAuthGuard)
   // @Get(':id/')
   // async findOne(@Param('id') id: string) {
