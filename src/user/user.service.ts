@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { randomInt } from 'crypto';
 
 
 @Injectable()
@@ -19,9 +20,15 @@ export class UserService {
     async searchUsers(searchParam: string) : Promise<User[]> {
     
 
-      const users: User[] = await this.userRepo.createQueryBuilder('user').where("user.username LIKE :s", { s: `%${searchParam}%` }).getMany();
+      const users : User[] = await this.userRepo.createQueryBuilder('user').where("user.username LIKE :s", { s: `%${searchParam}%` }).getMany();
       console.log(" users : " , users);
-      return users;
+      if (users.length !== 0)
+        return users;
+    
+      console.log('procceding to get random users if any ');
+      const defaults : User[] = (await this.userRepo.find({take: 10})).sort();
+      
+      return defaults;
     }
 
     async updateAvatar(uid: string , avatar: Express.Multer.File) {

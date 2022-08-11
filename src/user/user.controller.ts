@@ -15,15 +15,11 @@ export class UserController {
   async searchUsers(@Param('query') searchParam: string) : Promise<User[]> {
     
     console.log("Query string received : ", searchParam);
-    if (!searchParam) throw new ForbiddenException();;
+    // if (!searchParam) throw new ForbiddenException();;
     return this.userService.searchUsers(searchParam);
   }
   
-  @Get(':username')
-  async getUser(@Param('username') username: string) : Promise<User> {
-    
-      return this.userService.findByUsername(username);
-  }
+
   
   @Get()
   currentUser(@Request() req) {
@@ -31,6 +27,18 @@ export class UserController {
     console.log(req.user.uid);
     return this.userService.findOne(req.user.userId);
   }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @Get(':username')
+  async getUser(@Param('username') username: string) : Promise<User> {
+    
+      return this.userService.findByUsername(username);
+  }
+
 
   @Post(':id/avatar') // update avatar
   @UseInterceptors(FileInterceptor('file'))
@@ -41,10 +49,7 @@ export class UserController {
     return this.userService.updateAvatar(uid, file);
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
-  }
+
 
 
 
