@@ -19,7 +19,7 @@ export class friendsRequest {
 
   @Column()
   @ManyToOne(() => User, (user) => user.recF)
-  reciever: string;
+  receiver: string;
 
   @CreateDateColumn()
   date: Date;

@@ -24,6 +24,11 @@ export class FriendsController {
     const sender: string = payload['sender'];
     const receiver: string = payload['receiver'];
 
+    const friendRequest: friendsRequest = await this.friendsService.findOne(
+      sender,
+      receiver,
+    );
+    if (friendRequest) throw new ForbiddenException();
     if (
       (!sender || !receiver) &&
       (sender !== req.user.userId || receiver === sender)
@@ -35,10 +40,15 @@ export class FriendsController {
   @Post('accept')
   async acceptFriendRequest(@Body() payload): Promise<friendsRequest> {
     const uid: string = payload['uid'];
-    const status: boolean = payload['status'] === true;
 
-    if (!uid || !status) throw new ForbiddenException();
-    return this.friendsService.UpdateFriendInvite(uid, status);
+    if (!uid) throw new ForbiddenException();
+    return this.friendsService.UpdateFriendInvite(uid, true);
+  }
+
+  @Post('decline')
+  async delete(@Body() body) {
+    const uid = body['uid'];
+    await this.friendsService.delete(uid);
   }
 
   @Get('rooms')
@@ -47,7 +57,12 @@ export class FriendsController {
     if (!uid) throw new ForbiddenException();
     return this.friendsService.getAllFriendRooms(uid);
   }
-
+  @Get('requests')
+  async getFriendRequestsForUser(@Request() req): Promise<friendsRequest[]> {
+    const uid: string = req.user.userId;
+    if (!uid) throw new ForbiddenException();
+    return this.friendsService.getFriendRequestsForUser(uid);
+  }
   @Post('block')
   async blockFriendRequest(@Body() payload): Promise<friendsRequest> {
     const uid: string = payload['uid'];
@@ -59,7 +74,7 @@ export class FriendsController {
 
   @Get('all')
   async allFriends(@Request() req): Promise<friendsRequest[]> {
-    let userId = req.user.userId;
+    const userId = req.user.userId;
     if (!userId) throw new ForbiddenException();
 
     return this.friendsService.allFriends(userId);

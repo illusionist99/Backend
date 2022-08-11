@@ -2,6 +2,7 @@ import {
   Body,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   Request,
   Response,
 } from '@nestjs/common';
@@ -28,16 +29,39 @@ export class FriendsService {
     private userRepo: Repository<User>,
   ) {}
 
+  async delete(uid: string) {
+    const friendRequest = await this.friendRequestRepo.findOne({
+      where: { uid },
+    });
+
+    if (!friendRequest) throw new NotFoundException();
+
+    return await this.friendRequestRepo.remove(friendRequest, {});
+  }
+
+  async findOne(sender: string, receiver: string): Promise<friendsRequest> {
+    return await this.friendRequestRepo.findOne({
+      where: [
+        {
+          sender,
+          receiver,
+        },
+        {
+          sender: receiver,
+          receiver: sender,
+        },
+      ],
+    });
+  }
   async addFriend(sender: string, receiver: string): Promise<friendsRequest> {
-    
     // const rcvUser : User = await this.userService.findById(receiver);
     // const sndUser : User = await this.userService.findById(sender);
-    
+
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
-   
+
     const friendRequest: friendsRequest = new friendsRequest();
 
-    friendRequest.reciever = receiver;
+    friendRequest.receiver = receiver;
     friendRequest.sender = sender;
     friendRequest.status = false;
     friendRequest.date = new Date();
@@ -51,7 +75,6 @@ export class FriendsService {
     createdRoom.admins = [sender, receiver];
     createdRoom.type = 'private';
 
-
     await this.chatService.createRoom(createdRoom);
     this.friendRequestRepo.create(friendRequest);
     return await this.friendRequestRepo.save(friendRequest);
@@ -61,16 +84,28 @@ export class FriendsService {
     return this.chatService.findAllRooms(uid);
   }
 
-  async allFriends(userId: string): Promise<friendsRequest[]> {
-    return await this.friendRequestRepo.find({
+  async allFriends(userId: string): Promise<any[]> {
+    const reqs = await this.friendRequestRepo.find({
+      select: ['receiver', 'sender'],
       where: [
-        { status: true, reciever: userId },
+        { status: true, receiver: userId },
         { status: true, sender: userId },
       ],
-      relations: ['reciever', 'sender'],
+      relations: ['receiver', 'sender'],
+    });
+    return await Promise.all(
+      reqs.map((r) => {
+        console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
+        return (r.sender as any).uid === userId ? r.receiver : r.sender;
+      }),
+    );
+  }
+  async getFriendRequestsForUser(userId: string): Promise<any[]> {
+    return this.friendRequestRepo.find({
+      where: [{ status: false, receiver: userId }],
+      relations: ['sender'],
     });
   }
-
   async UpdateFriendInvite(uid: string, status: boolean): Promise<any> {
     const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
 
