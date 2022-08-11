@@ -27,10 +27,13 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('search') // better way of retreiving data + protect username Route
-  async searchUsers(@Query('query') searchParam: string): Promise<User[]> {
+  async searchUsers(
+    @Request() req,
+    @Query('query') searchParam: string,
+  ): Promise<User[]> {
     console.log('Query string received : ', searchParam);
     //if (!searchParam) throw new ForbiddenException();
-    return this.userService.searchUsers(searchParam);
+    return this.userService.searchUsers(req.user.userId, searchParam);
   }
 
   @Get(':username')

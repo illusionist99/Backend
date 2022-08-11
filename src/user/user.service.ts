@@ -84,19 +84,17 @@ export class UserService {
     });
   }
 
-  async searchUsers(searchParam: string): Promise<User[]> {
+  async searchUsers(uid: string, searchParam: string): Promise<User[]> {
     const users: User[] = await this.userRepo
       .createQueryBuilder('user')
       .where('user.username LIKE :s', { s: `%${searchParam}%` })
       .getMany();
     console.log(' users : ', users);
-    if (users.length !== 0)
-    return users;
+    if (users.length !== 0) return users.filter((u) => u.uid != uid);
 
     console.log('procceding to get random users if any ');
-    const defaults : User[] = (await this.userRepo.find({take: 10})).sort();
-
-    return defaults;
+    const defaults: User[] = (await this.userRepo.find({ take: 10 })).sort();
+    return defaults.filter((u) => u.uid != uid);
   }
 
   async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
