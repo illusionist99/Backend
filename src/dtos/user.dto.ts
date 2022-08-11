@@ -17,9 +17,13 @@ export class CreateUserDto {
   friends: friendsRequest[];
   wins: number;
   losses: number;
+  tfaSecret: string;
+  tfaEnabled: boolean;
+
 }
 
 export class UpdateUserDto {
+  
   nickname: string;
   avatar: string;
   picture: Uint8Array;
@@ -34,4 +38,6 @@ export class UpdateUserDto {
   friends: friendsRequest[];
   wins: number;
   losses: number;
+  tfaSecret: string;
+  tfaEnabled: boolean;
 }

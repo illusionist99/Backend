@@ -82,7 +82,7 @@ export class AuthService {
     console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
       console.log('Payload matchs rft in db  ', payload);
-      const tokens = await this.getTokens(payload.sub, payload.username);
+      const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled);
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
@@ -152,7 +152,7 @@ export class AuthService {
 
     let user = await this.userService.findByUsername(userData.data.login);
     if (user) {
-      const tokens = await this.getTokens(user.uid, user.username);
+      const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled);
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
@@ -171,15 +171,15 @@ export class AuthService {
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';
     await this.userService.create(newUser);
-    const tokens = await this.getTokens(newUser.uid, newUser.username);
+    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     console.log('created New User and assigned RefreshToken');
     return tokens;
   }
 
-  async getTokens(uid: string, login: string): Promise<any> {
-    const payload = { username: login, sub: uid };
+  async getTokens(uid: string, login: string, state: boolean): Promise<any> {
+    const payload = { username: login, sub: uid, tfaEnabled: state };
 
     return {
       access_token: await this.jwtService.signAsync(payload, {

@@ -52,7 +52,7 @@ export class AppController {
     console.log(req.user, userId);
     // return this.authService.setupMfa(userId);
 
-    const isValid = this.authService.ValidateTfa(body.code, req.user.tfaSecret);
+    const isValid = this.authService.ValidateTfa(body.code, body.tfaSecret);
 
     console.log("Token is Valide ", isValid);
     if (!isValid) throw new UnauthorizedException();
@@ -74,6 +74,8 @@ export class AppController {
 
     console.log(      body.twoFactorAuthenticationCode,
       request.user,)
+
+    const user : User = await this.userService.findById(request.user.userId);
     const isCodeValid = await this.authService.ValidateTfa(
       body.twoFactorAuthenticationCode,
       body.secret,
@@ -94,6 +96,7 @@ export class AppController {
     @Request() req,
     @Response({ passthrough: true }) res,
   ): Promise<any> {
+
     code = code['code'];
     console.log('code being used ', code);
     const payload = await this.authService.findOrCreate(code);
@@ -112,8 +115,9 @@ export class AppController {
     const payload = await this.authService.getTokens(
       req.user.uid,
       req.user.username,
+      req.user.tfaEnabled
     );
-
+      console.log(payload);
     if (payload) {
       res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
       await this.authService.updateRtHash(req.user.uid, payload.refreshToken);
