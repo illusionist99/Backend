@@ -1,24 +1,27 @@
-import { ChatRoom } from "src/entities/chatRoom.entity";
-
-
-export class  gamePlayersDto {
-
-    id: string;
-    player1: string;
-    player2: string;
-}
-
-export class scoreDto {
-
-    player1 : number;
-    player2 : number;
-}
 export class CreateGameDto {
+  id: number;
 
-    id: string;
-    mode: string;
-    status: string;
-    players: gamePlayersDto;
-    scores: scoreDto;
-    gameChatRoom: ChatRoom;
+  gameId: string;
+
+  mode: 'classic' | 'doublepaddle' | 'goalkeeper';
+
+  playerOne: string;
+
+  playerTwo: string;
+
+  scoreOne: number;
+
+  scoreTwo: number;
+
+  status: 0 | 1;
+}
+
+export class UpdateGameDto {
+  scoreOne?: number;
+
+  scoreTwo?: number;
+
+  status?: 0 | 1;
+
+  winner?: string;
 }
