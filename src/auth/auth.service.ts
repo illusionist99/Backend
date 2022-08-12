@@ -15,7 +15,6 @@ import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { toDataURL } from 'qrcode';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,11 +23,8 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-
   async loginWith2fa(user: User) {
-
-  
-    const payload = { username: user.username, sub: user.uid, tfa: true};
+    const payload = { username: user.username, sub: user.uid, tfa: true };
 
     console.log('new payload ', payload);
     return {
@@ -43,22 +39,19 @@ export class AuthService {
     };
   }
 
-  async setupMfa( userId : string ) {
-  
-    const user : User = await  this.userService.findById(userId);
+  async setupMfa(userId: string) {
+    const user: User = await this.userService.findById(userId);
     if (!user) throw new ForbiddenException();
 
     await this.userService.EnableTfa(userId);
-    return  await  this.userService.generateTFAsecret(user);
+    return await this.userService.generateTFAsecret(user);
   }
 
   async ValidateTfa(code: string, secret: string) {
-
     return this.userService.ValidateTfa(code, secret);
   }
 
   async generateQrCode(otpauthUrl: string) {
-
     return toDataURL(otpauthUrl);
   }
 
@@ -66,9 +59,6 @@ export class AuthService {
     @Request() req,
     @Response({ passthrough: true }) res,
   ): Promise<any> {
-
-
-    
     const refreshToken = req?.cookies['jwt-rft'];
 
     if (!refreshToken) throw new BadRequestException();
