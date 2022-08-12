@@ -57,6 +57,7 @@ export class UserService {
     });
   }
 
+
   async generateTFAsecret(user: User) {
     const secret = otplib.authenticator.generateSecret();
 

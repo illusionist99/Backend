@@ -63,11 +63,12 @@ export class User {
   @Column({ default: 0 })
   losses: number;
 
-  @Column({ type: 'bytea', nullable: true })
+  @Column({ nullable: true })
   tfaSecret: string; // tfa string
 
   @Column({ default: false })
   tfaEnabled: boolean;
+
   // @OneToMany(type => gameEntity, matchHistory => matchHistory.players.player1)
   // matchHistory: gameEntity[];
 }

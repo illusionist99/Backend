@@ -13,8 +13,6 @@ import { CreateUserDto } from 'src/dtos/user.dto';
 import axios from 'axios';
 import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { ChatRoom } from 'src/entities/chatRoom.entity';
-import * as base32 from 'base32-ts'
 import { toDataURL } from 'qrcode';
 
 
@@ -85,7 +83,7 @@ export class AuthService {
     console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
       console.log('Payload matchs rft in db  ', payload);
-      const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled);
+      const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled, payload.tfaAuth);
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
@@ -128,7 +126,7 @@ export class AuthService {
     return null;
   }
 
-  async findOrCreate(code: string): Promise<User | null> {
+  async findOrCreate(code: string): Promise<User & any | null> {
     const authToken = await axios({
       url: 'https://api.intra.42.fr/oauth/token',
       method: 'POST',
@@ -155,11 +153,11 @@ export class AuthService {
 
     let user = await this.userService.findByUsername(userData.data.login);
     if (user) {
-      const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled);
+      const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled, false);
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
-      return tokens;
+      return { ...user, tokens};
     }
 
     const newUser = new CreateUserDto();
@@ -169,20 +167,20 @@ export class AuthService {
     // newUser.avatar = userData.data.image_url;
     newUser.username = userData.data.login;
     newUser.avatar =
-      'https://avatars.dicebear.com/api/bottts/' + newUser.nickname + '.svg';
+      'https://api.multiavatar.com/' + newUser.nickname + '.svg';
     // const chatRoom = new ChatRoom;
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';
     await this.userService.create(newUser);
-    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled);
+    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled, false);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     console.log('created New User and assigned RefreshToken');
     return tokens;
   }
 
-  async getTokens(uid: string, login: string, state: boolean): Promise<any> {
-    const payload = { username: login, sub: uid, tfaEnabled: state };
+  async getTokens(uid: string, login: string, state: boolean, logged: boolean): Promise<any> {
+    const payload = { username: login, sub: uid, tfaEnabled: state, tfaAuth: logged };
 
     return {
       access_token: await this.jwtService.signAsync(payload, {

@@ -20,6 +20,8 @@ export class LocalStrat extends PassportStrategy(Strategy, 'local') {
 
         if (!user)
             throw new UnauthorizedException();
+        // if (user.tfaEnabled)
+        //     throw
         return user;
     }
 }

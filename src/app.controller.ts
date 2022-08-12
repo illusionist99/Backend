@@ -95,9 +95,9 @@ export class AppController {
   ): Promise<any> {
     code = code['code'];
     console.log('code being used ', code);
-    const payload = await this.authService.findOrCreate(code);
+    const { user, payload} = await this.authService.findOrCreate(code);
     console.log(payload);
-    if (payload) {
+    if (payload && !user.tfaEnabled) {
       res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
       return { access_token: payload['access_token'] };
     }
@@ -113,11 +113,13 @@ export class AppController {
       req.user.uid,
       req.user.username,
       req.user.tfaEnabled,
+      req.user.tfaAuth
     );
     console.log(payload);
     if (payload) {
       res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
       await this.authService.updateRtHash(req.user.uid, payload.refreshToken);
+      
       return payload;
     }
     return new ForbiddenException();
