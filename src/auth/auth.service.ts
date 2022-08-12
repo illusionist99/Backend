@@ -14,9 +14,8 @@ import axios from 'axios';
 import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
-import * as base32 from 'base32-ts'
+import * as base32 from 'base32-ts';
 import { toDataURL } from 'qrcode';
-
 
 @Injectable()
 export class AuthService {
@@ -26,11 +25,8 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-
   async loginWith2fa(user: User) {
-
-  
-    const payload = { username: user.username, sub: user.uid, tfa: true};
+    const payload = { username: user.username, sub: user.uid, tfa: true };
 
     console.log('new payload ', payload);
     return {
@@ -45,22 +41,19 @@ export class AuthService {
     };
   }
 
-  async setupMfa( userId : string ) {
-  
-    const user : User = await  this.userService.findById(userId);
+  async setupMfa(userId: string) {
+    const user: User = await this.userService.findById(userId);
     if (!user) throw new ForbiddenException();
 
     await this.userService.EnableTfa(userId);
-    return  await  this.userService.generateTFAsecret(user);
+    return await this.userService.generateTFAsecret(user);
   }
 
   async ValidateTfa(code: string, secret: string) {
-
     return this.userService.ValidateTfa(code, secret);
   }
 
   async generateQrCode(otpauthUrl: string) {
-
     return toDataURL(otpauthUrl);
   }
 
@@ -68,9 +61,6 @@ export class AuthService {
     @Request() req,
     @Response({ passthrough: true }) res,
   ): Promise<any> {
-
-
-    
     const refreshToken = req?.cookies['jwt-rft'];
 
     if (!refreshToken) throw new BadRequestException();
@@ -85,7 +75,11 @@ export class AuthService {
     console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
       console.log('Payload matchs rft in db  ', payload);
-      const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled);
+      const tokens = await this.getTokens(
+        payload.sub,
+        payload.username,
+        payload.tfaEnabled,
+      );
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
@@ -155,7 +149,11 @@ export class AuthService {
 
     let user = await this.userService.findByUsername(userData.data.login);
     if (user) {
-      const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled);
+      const tokens = await this.getTokens(
+        user.uid,
+        user.username,
+        user.tfaEnabled,
+      );
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
@@ -168,13 +166,16 @@ export class AuthService {
     newUser.nickname = userData.data.displayname;
     // newUser.avatar = userData.data.image_url;
     newUser.username = userData.data.login;
-    newUser.avatar =
-      'https://avatars.dicebear.com/api/bottts/' + newUser.nickname + '.svg';
+    newUser.avatar = 'https://api.multiavatar.com/' + newUser.nickname + '.svg';
     // const chatRoom = new ChatRoom;
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';
     await this.userService.create(newUser);
-    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled);
+    const tokens = await this.getTokens(
+      newUser.uid,
+      newUser.username,
+      newUser.tfaEnabled,
+    );
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     console.log('created New User and assigned RefreshToken');

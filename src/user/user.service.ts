@@ -119,8 +119,7 @@ export class UserService {
     newUser.refreshToken = '';
     password = undefined;
     newUser.chatRooms = [];
-    newUser.avatar =
-      'https://avatars.dicebear.com/api/bottts/' + newUser.nickname + '.svg';
+    newUser.avatar = 'https://api.multiavatar.com/' + newUser.nickname + '.svg';
     // createUserDto.password = bycrypt
     // console.log(newUser, username, password);
     // this.userRepo.create(newUser);
