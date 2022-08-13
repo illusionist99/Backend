@@ -33,19 +33,20 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh' ) {
 
     async validate(payload : jwtPayload) {
 
-        console.log('validation user using jwt start');
-        const userId: string = payload.username;
+        console.log('validation user using jwt start refresher ', payload);
+        const userId: string = payload.sub;
 
         const user = await this.userService.findById(userId);
-
+        console.log(user);
         if (!user) throw new UnauthorizedException();
 
-
+        console.log('checking if tfa is enabled');
         if (!user.tfaEnabled)
-            return user;
+            return payload;
 
+        console.log('checking if tfa is auth ');
         if (payload.tfaAuth)
-            return user;
+            return payload;
 
         // return { userId: payload.sub, username: payload.username, tfaEnabled: payload.tfaEnabled, tfaAuth: payload.tfaAuth };
     }

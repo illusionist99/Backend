@@ -33,14 +33,16 @@ export class UserController {
   ): Promise<User[]> {
     console.log('Query string received : ', searchParam);
     //if (!searchParam) throw new ForbiddenException();
-    return this.userService.searchUsers(req.user.userId, searchParam);
+    return this.userService.searchUsers(req.user.sub, searchParam);
   }
 
   @Get(':username')
   async getUser(@Param('username') username: string, @Req() req): Promise<any> {
     const user: User = await this.userService.findByUsername(username);
     if (!user) throw new NotFoundException();
-    const me = req.user.userId;
+
+    console.log(req.user)
+    const me = req.user.sub;
     let rule;
     if (me === user.uid) rule = 'me';
     else {
@@ -62,8 +64,9 @@ export class UserController {
 
   @Get()
   currentUser(@Request() req) {
-    console.log(req.user.uid);
-    return this.userService.findOne(req.user.userId);
+
+    const userId : string = req.user.sub;
+    return this.userService.findOne(userId);
   }
 
   @Get(':id')

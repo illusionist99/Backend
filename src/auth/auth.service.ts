@@ -15,6 +15,12 @@ import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { toDataURL } from 'qrcode';
 
+
+type jwtTokens = {
+  access_token: string,
+  refreshToken: string,
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,14 +30,16 @@ export class AuthService {
   ) {}
 
   async loginWith2fa(user: User) {
-    const payload = { username: user.username, sub: user.uid, tfa: true };
+    const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
     console.log('new payload ', payload);
     return {
+  
       access_token: await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXP_H,
       }),
+  
       refreshToken: await this.jwtService.signAsync(payload, {
         secret: process.env.RFH_SECRET,
         expiresIn: process.env.RFH_EXP_D,
@@ -43,8 +51,8 @@ export class AuthService {
     const user: User = await this.userService.findById(userId);
     if (!user) throw new ForbiddenException();
 
-    await this.userService.EnableTfa(userId);
-    return await this.userService.generateTFAsecret(user);
+    //await this.userService.EnableTfa(userId);
+    return await this.userService.generateTFAsecret(user.email, user.uid);
   }
 
   async ValidateTfa(code: string, secret: string) {
@@ -58,7 +66,7 @@ export class AuthService {
   async refreshToken(
     @Request() req,
     @Response({ passthrough: true }) res,
-  ): Promise<any> {
+  ): Promise<jwtTokens> {
     const refreshToken = req?.cookies['jwt-rft'];
 
     if (!refreshToken) throw new BadRequestException();
@@ -77,7 +85,7 @@ export class AuthService {
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
-      delete tokens.refreshToken;
+      // delete tokens.refreshToken;
       return tokens;
     }
     throw new BadRequestException();
@@ -116,7 +124,7 @@ export class AuthService {
     return null;
   }
 
-  async findOrCreate(code: string): Promise<User & any | null> {
+  async findOrCreate(code: string): Promise<jwtTokens> {
     const authToken = await axios({
       url: 'https://api.intra.42.fr/oauth/token',
       method: 'POST',
@@ -129,7 +137,7 @@ export class AuthService {
       },
     });
 
-    console.log(authToken);
+    // console.log(authToken);
 
     const token = authToken.data['access_token'];
 
@@ -142,12 +150,14 @@ export class AuthService {
     });
 
     let user = await this.userService.findByUsername(userData.data.login);
+
+    console.log('checking user');
     if (user) {
       const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled, false);
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
-      return { ...user, tokens};
+      return tokens;
     }
 
     const newUser = new CreateUserDto();
@@ -169,7 +179,7 @@ export class AuthService {
     return tokens;
   }
 
-  async getTokens(uid: string, login: string, state: boolean, logged: boolean): Promise<any> {
+  async getTokens(uid: string, login: string, state: boolean, logged: boolean): Promise<jwtTokens> {
     const payload = { username: login, sub: uid, tfaEnabled: state, tfaAuth: logged };
 
     return {

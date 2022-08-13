@@ -54,20 +54,21 @@ export class UserService {
 
     return await this.userRepo.update(user.uid, {
       tfaEnabled: true,
+      
     });
   }
 
 
-  async generateTFAsecret(user: User) {
+  async generateTFAsecret(mail: string, uid: string) {
     const secret = otplib.authenticator.generateSecret();
 
     const otpauthUrl = otplib.authenticator.keyuri(
-      user.email,
+      mail,
       'Coolest Pong',
       secret,
     );
 
-    this.updateMfaKey(user.uid, secret);
+    this.updateMfaKey(uid, secret);
 
     return {
       secret,
@@ -166,6 +167,8 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { username } });
+
+
     if (user) {
       return {
         ...user,
@@ -181,7 +184,7 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { uid } });
-
+    console.log(user);
     if (user)
       return {
         ...user,

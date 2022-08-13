@@ -30,8 +30,8 @@ export class JwtStartegy extends PassportStrategy(Strategy, 'jwt' ) {
 
     async validate(payload : jwtPayload) {
 
-        console.log('validation user using jwt start');
-        const userId: string = payload.username;
+        console.log('validation user using jwt start  ', payload);
+        const userId: string = payload.sub;
 
         const user = await this.userService.findById(userId);
 
@@ -39,10 +39,10 @@ export class JwtStartegy extends PassportStrategy(Strategy, 'jwt' ) {
 
 
         if (!user.tfaEnabled)
-            return user;
+            return payload;
 
         if (payload.tfaAuth)
-            return user;
+            return payload;
         // return { userId: payload.sub, username: payload.username, tfaEnabled: payload.tfaEnabled, tfaAuth: payload.tfaAuth };
     }
 }

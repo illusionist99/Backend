@@ -31,7 +31,7 @@ export class FriendsController {
     if (friendRequest) throw new ForbiddenException();
     if (
       (!sender || !receiver) &&
-      (sender !== req.user.userId || receiver === sender)
+      (sender !== req.user.sub || receiver === sender)
     )
       throw new ForbiddenException();
     return this.friendsService.addFriend(sender, receiver);
@@ -53,13 +53,13 @@ export class FriendsController {
 
   @Get('rooms')
   async getAllFriendRooms(@Request() req): Promise<ChatRoom[]> {
-    const uid: string = req.user.userId;
+    const uid: string = req.user.sub;
     if (!uid) throw new ForbiddenException();
     return this.friendsService.getAllFriendRooms(uid);
   }
   @Get('requests')
   async getFriendRequestsForUser(@Request() req): Promise<friendsRequest[]> {
-    const uid: string = req.user.userId;
+    const uid: string = req.user.sub;
     if (!uid) throw new ForbiddenException();
     return this.friendsService.getFriendRequestsForUser(uid);
   }
@@ -74,7 +74,7 @@ export class FriendsController {
 
   @Get('all')
   async allFriends(@Request() req): Promise<friendsRequest[]> {
-    const userId = req.user.userId;
+    const userId = req.user.sub;
     if (!userId) throw new ForbiddenException();
 
     return this.friendsService.allFriends(userId);
