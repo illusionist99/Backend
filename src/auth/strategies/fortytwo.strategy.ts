@@ -11,12 +11,8 @@ import { UserService } from "src/user/user.service";
 @Controller()
 export class fortyTwoStrat extends PassportStrategy(Strategy) {
 
-    constructor(private readonly userService: UserService, private readonly configService: ConfigService) {
+    constructor(private readonly userService: UserService) {
 
-
-        console.log('env usied are loaded :', process.env.clientID,
-            process.env.clientSecret,
-            process.env.callbackURL,)
         super({
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,

@@ -88,7 +88,6 @@ export class AppController {
   async authenticate(@Request() request, @Body() body) {
     console.log(body.code, request.user);
 
-    const user: User = await this.userService.findById(request.user.sub);
     const isCodeValid = await this.authService.ValidateTfa(
       body.code,
       body.secret,
