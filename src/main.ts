@@ -6,6 +6,8 @@ import { Options } from '@nestjs/common';
 import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
 
+require("dotenv").config();
+
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
   
@@ -13,7 +15,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useStaticAssets(join(__dirname, '..', 'static'));
   app.enableCors({
-    origin: ['http://localhost:3500', 'http://localhost', '*'],
+    origin: ['http://localhost:3500', 'http://localhost', 'http://localhost:8000'],
     credentials: true,
   });
   await app.listen(3500);
