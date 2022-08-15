@@ -23,6 +23,15 @@ export class ChatController {
     }
 
 
+    @Get('messages')
+    async getAllMessages(@Request() req) {
+
+        const userId : string = req.user.sub;
+        
+        return this.chatService.findAllMessages(userId);
+    }
+
+
 
     @Get('rooms')
     async getAllRooms(@Request() req) {

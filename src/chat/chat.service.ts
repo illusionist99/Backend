@@ -58,18 +58,23 @@ export class ChatService {
   }
 
   async findAllRooms(uid: string) {
-    // console.log( await this.chatRoomRepo.find());
-    // return await this.chatRoomRepo.find();
-    
-    console.log('looking for ', uid)
+
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({ where: [
     {
       owner: uid,
     },{}], relations: ["messages"]})
-    const Messages: ChatMessage[][] = chatRooms.map((chatroom) => { return chatroom.messages; });
-
-    console.log(Messages);
     return chatRooms;
+  }
+
+  async findAllMessages(uid: string) {
+
+    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({ where: [
+    {
+      owner: uid,
+    },{}], relations: ["messages"]})
+    const Messages: {cid: string, messages: ChatMessage[]}[] = chatRooms.map((chatroom) => { return { cid: chatroom.cid , messages: chatroom.messages}; });
+
+    return Messages;
   }
 
 
