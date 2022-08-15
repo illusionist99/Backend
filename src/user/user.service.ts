@@ -281,6 +281,6 @@ export class UserService {
   async leaderboard() {
     return this.userRepo
       .find()
-      .then((e) => e.sort((a, b) => b.level - a.level));
+      .then((e) => e.sort((a, b) => b.xp - a.xp));
   }
 }
