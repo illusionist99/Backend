@@ -47,16 +47,18 @@ export class AuthService {
     };
   }
 
-  async setupMfa(userId: string) {
-    const user: User = await this.userService.findById(userId);
-    if (!user) throw new ForbiddenException();
+  async setupMfa(userId: string) : Promise<{ secret: string, otpauthUrl: string }> {
 
+
+    const user: User = await this.userService.findById(userId);
+  
+    if (!user) throw new ForbiddenException();
     //await this.userService.EnableTfa(userId);
     return await this.userService.generateTFAsecret(user.email, user.uid);
   }
 
-  async ValidateTfa(code: string, secret: string) {
-    return this.userService.ValidateTfa(code, secret);
+  async ValidateTfa(code: string, secret: string) : Promise<Boolean> {
+    return await this.userService.ValidateTfa(code, secret);
   }
 
   async generateQrCode(otpauthUrl: string) {

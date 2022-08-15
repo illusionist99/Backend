@@ -101,7 +101,6 @@ export class AppController {
     return this.authService.loginWith2fa(request.user);
   }
 
-  // HJEXUVZRGFWU6FIT
 
   @Get('auth')
   async LoginfortyTwo(

@@ -18,10 +18,10 @@ export class ChatMessage {
   text: string;
 
   @ManyToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid)
-  roomId: ChatRoom;
+  roomId: string;
 
   @ManyToOne((type) => User, (user) => user.uid)
-  ownerId: User;
+  ownerId: string;
 
   @Column()
   createdAt: Date;

@@ -1,5 +1,4 @@
-import { base32Encode } from 'base32-encode';
-import { Entity, Exclusion, JoinTable, OneToOne } from 'typeorm';
+import { Entity, JoinTable } from 'typeorm';
 import { PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ChatRoom } from './chatRoom.entity';
 import { friendsRequest } from './friendRequest.entity';

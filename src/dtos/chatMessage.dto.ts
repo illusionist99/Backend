@@ -6,7 +6,7 @@ export class createChatMessageDto {
 
     messageId: string;
     text: string;
-    roomId: ChatRoom;
-    ownerId: User;
+    roomId: string;
+    ownerId: string;
     createdAt: Date;
 }

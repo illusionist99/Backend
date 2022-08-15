@@ -63,7 +63,11 @@ export class ChatService {
     
     console.log('looking for ', uid)
     const user = await this.userRepo.findOne({ where: {uid}, relations: ['chatRooms']});
-    console.log(user);
+    const chatRooms = await this.chatRoomRepo.findOne({ where: [
+    {
+      owner: uid,
+    },{}], relations: ["messages", "admins", "banned"]})
+    console.log(chatRooms);
     return user.chatRooms ;
   }
 
