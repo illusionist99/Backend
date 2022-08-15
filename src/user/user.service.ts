@@ -90,7 +90,7 @@ export class UserService {
     searchParam = searchParam ? searchParam.trim() : '%%';
     const users: User[] = await this.userRepo
       .createQueryBuilder('user')
-      .where('user.username ILIKE :s', { s: `%${searchParam}%` })
+      .where('user.username LIKE :s', { s: `%${searchParam}%` })
       .getMany();
     return users.filter((u) => u.uid != uid);
   }
