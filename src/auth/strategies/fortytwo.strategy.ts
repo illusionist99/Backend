@@ -1,10 +1,8 @@
-import { Controller, Get, Injectable, UseGuards } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { AuthGuard, PassportStrategy } from "@nestjs/passport";
+import { Controller } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-42";
 import { CreateUserDto } from "src/dtos/user.dto";
 import { User } from "src/entities/user.entity";
-import { AuthService } from "../auth.service";
 import * as bcrypt from 'bcrypt';
 import { UserService } from "src/user/user.service";
 

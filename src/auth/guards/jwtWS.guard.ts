@@ -1,7 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
-import { Socket } from "dgram";
-import { Observable } from "rxjs";
 import { User } from "src/entities/user.entity";
 import { AuthService } from "../auth.service";
 

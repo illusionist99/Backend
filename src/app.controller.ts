@@ -8,16 +8,15 @@ import {
   Get,
   Query,
   UnauthorizedException,
-  Redirect,
   ForbiddenException,
-  BadRequestException,
-  Req,
+  Param,
+  HttpException,
 } from '@nestjs/common';
-import { use } from 'passport';
 import { AuthService } from './auth/auth.service';
 import { fortyTwoGuard } from './auth/guards/fortytwo.guard';
-import { JwtAuthGuard, jwtRefreshAuthGuard } from './auth/guards/jwt.guard';
+import { jwtRefreshAuthGuard } from './auth/guards/jwt.guard';
 import { LocalGuard } from './auth/guards/local.guard';
+import { tfaGuard } from './auth/guards/tfa.guard';
 import { User } from './entities/user.entity';
 import { UserService } from './user/user.service';
 
@@ -83,39 +82,60 @@ export class AppController {
     return req.user;
   }
 
+  @Get('testtfa123')
+  @UseGuards(tfaGuard)
+  tfatest() {
+    return 'working';
+  }
+
   @Post('2fa/authenticate')
-  @UseGuards(jwtRefreshAuthGuard)
-  async authenticate(@Request() request, @Body() body) {
-    console.log(body.code, request.user);
+  @UseGuards(tfaGuard)
+  async authenticate(@Request() request, @Body() body, @Response({passthrough: true}) res) {
+
+    console.log('request ljat ', request.user);
+    const user : User = await this.userService.findById(request.user.sub);
+
+    if (!user) throw new ForbiddenException();
 
     const isCodeValid = await this.authService.ValidateTfa(
       body.code,
-      body.secret,
+      request.user.secret,
     );
 
     if (!isCodeValid) {
       throw new UnauthorizedException('Wrong authentication code');
     }
+    res.cookie('tfa-rft', new Date(), { httpOnly: true });
+
     console.log('code is valid ', isCodeValid);
     return this.authService.loginWith2fa(request.user);
   }
 
-
+ // redirect to 2fa/authenticate
   @Get('auth')
   async LoginfortyTwo(
     @Query() code,
-    @Request() req,
     @Response({ passthrough: true }) res,
   ): Promise<any> {
+
+
     code = code['code'];
-    console.log('code being u');
-    const payload = await this.authService.findOrCreate(code);
-    console.log(payload);
-    if (payload) {
-      res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
-      return { access_token: payload['access_token'] };
+    const {user , payload} = await this.authService.findOrCreate(code);
+
+    
+    if (!payload) throw new ForbiddenException();
+    if (payload['tfaEnabled'] === true) {
+      
+      const jwtTfa = await this.authService.tfaJwt(user, payload);
+
+      res.cookie('tfa-rft', jwtTfa['tfaAccess'], { httpOnly: true });
+
+      res.status(201) ;
+      return;
     }
-    throw new ForbiddenException();
+
+    res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
+    return { access_token: payload['access_token'] };
   }
 
   @Post('auth/login')
@@ -130,6 +150,17 @@ export class AppController {
       false 
     );
     console.log(payload);
+    const user = await this.userService.findById( req.user.uid)
+    if (payload['tfaEnabled'] === true) {
+      
+      const jwtTfa = await this.authService.tfaJwt(user, payload);
+
+      res.cookie('tfa-rft', jwtTfa['tfaAccess'], { httpOnly: true });
+
+      res.status(201) ;
+      return;
+    }
+
     if (payload) {
       res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
       await this.authService.updateRtHash(req.user.uid, payload.refreshToken);

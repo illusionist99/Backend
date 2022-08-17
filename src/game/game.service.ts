@@ -1,8 +1,6 @@
-import { Injectable, Request } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from '../dtos/user.dto';
-import { User } from 'src/entities/user.entity';
 import { Game } from 'src/entities/game.entity';
 import { CreateGameDto, UpdateGameDto } from 'src/dtos/game.dto';
 import { UserService } from 'src/user/user.service';

@@ -6,10 +6,8 @@ import {
   Body,
   ForbiddenException,
   Get,
-  Req,
 } from '@nestjs/common';
 import { FriendsService } from './friends.service';
-import { UserService } from '../user/user.service';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ChatRoom } from 'src/entities/chatRoom.entity';

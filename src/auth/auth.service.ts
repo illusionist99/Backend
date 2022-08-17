@@ -3,7 +3,6 @@ import {
   ForbiddenException,
   Injectable,
   Request,
-  Res,
   Response,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -19,6 +18,8 @@ import { toDataURL } from 'qrcode';
 type jwtTokens = {
   access_token: string,
   refreshToken: string,
+  tfaEnabled: boolean,
+  tfaAuth: boolean
 }
 
 @Injectable()
@@ -29,7 +30,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async loginWith2fa(user: User) {
+  async loginWith2fa(user: User) : Promise<jwtTokens> {
     const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
     console.log('new payload ', payload);
@@ -43,6 +44,24 @@ export class AuthService {
       refreshToken: await this.jwtService.signAsync(payload, {
         secret: process.env.RFH_SECRET,
         expiresIn: process.env.RFH_EXP_D,
+      }),
+      tfaEnabled: payload['tfaEnabled'],
+      tfaAuth: payload['tfaAuth'],
+    };
+  }
+
+  async tfaJwt(user : User, payload: jwtTokens) {
+
+    const verfiyRft : boolean = await this.verifyRT(payload.refreshToken);
+    const verifyAcc : boolean  = await this.verify(payload.access_token);
+
+    if (!verfiyRft || !verifyAcc) throw new ForbiddenException();
+
+
+    return {
+      tfaAccess: await this.jwtService.signAsync({ sub: user.uid, tfaEnabled: user.tfaEnabled, secret: user.tfaSecret}, {
+        secret: process.env.RFH_SECRET,
+        expiresIn: '60s'
       }),
     };
   }
@@ -126,30 +145,40 @@ export class AuthService {
     return null;
   }
 
-  async findOrCreate(code: string): Promise<jwtTokens> {
-    const authToken = await axios({
-      url: 'https://api.intra.42.fr/oauth/token',
-      method: 'POST',
-      data: {
-        grant_type: 'authorization_code',
-        client_id: process.env.clientID,
-        client_secret: process.env.clientSecret,
-        code,
-        redirect_uri: process.env.callbackURL,
-      },
-    });
+  async findOrCreate(code: string): Promise<any> {
+
+    try {
+      var authToken = await axios({
+        url: 'https://api.intra.42.fr/oauth/token',
+        method: 'POST',
+        data: {
+          grant_type: 'authorization_code',
+          client_id: process.env.clientID,
+          client_secret: process.env.clientSecret,
+          code,
+          redirect_uri: process.env.callbackURL,
+        },
+      });
+    } catch (error) {
+      console.log('error ')
+      return error;
+    }
 
     // console.log(authToken);
+    var token = authToken.data['access_token'];
+    try {
 
-    const token = authToken.data['access_token'];
+      var userData = await axios({
+        url: 'https://api.intra.42.fr/v2/me',
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+      });
+    } catch( error ) {
+      return error;
+    }
 
-    const userData = await axios({
-      url: 'https://api.intra.42.fr/v2/me',
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + token,
-      },
-    });
 
     let user = await this.userService.findByUsername(userData.data.login);
 
@@ -159,7 +188,7 @@ export class AuthService {
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
-      return tokens;
+      return {user, tokens};
     }
 
     const newUser = new CreateUserDto();
@@ -174,11 +203,11 @@ export class AuthService {
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';
     await this.userService.create(newUser);
-    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled, false);
+    const tokens = await this.getTokens(newUser.uid, newUser.username, false, false);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     console.log('created New User and assigned RefreshToken');
-    return tokens;
+    return {newUser, tokens};
   }
 
   async getTokens(uid: string, login: string, state: boolean, logged: boolean): Promise<jwtTokens> {
@@ -193,6 +222,8 @@ export class AuthService {
         secret: process.env.RFH_SECRET,
         expiresIn: process.env.RFH_EXP_D,
       }),
+      tfaEnabled: payload['tfaEnabled'],
+      tfaAuth: payload['tfaAuth'],
     };
   }
 

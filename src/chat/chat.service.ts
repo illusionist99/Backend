@@ -6,7 +6,6 @@ import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
-// import { UpdateChatDto } from '../dtos/';
 import * as bcrypt from 'bcrypt'
 
 @Injectable()
