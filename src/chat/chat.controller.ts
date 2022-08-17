@@ -22,10 +22,21 @@ export class ChatController {
         return this.chatService.createRoom(createRoom);
     }
 
+
+    @Get('messages')
+    async getAllMessages(@Request() req) {
+
+        const userId : string = req.user.sub;
+        
+        return this.chatService.findAllMessages(userId);
+    }
+
+
+
     @Get('rooms')
     async getAllRooms(@Request() req) {
     
-        return this.chatService.findAllRooms(req.user.userId);
+        return this.chatService.findAllRooms(req.user.sub);
     }
 
     @Get(':uid')

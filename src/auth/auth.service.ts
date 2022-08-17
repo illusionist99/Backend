@@ -13,9 +13,13 @@ import { CreateUserDto } from 'src/dtos/user.dto';
 import axios from 'axios';
 import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { ChatRoom } from 'src/entities/chatRoom.entity';
-import * as base32 from 'base32-ts';
 import { toDataURL } from 'qrcode';
+
+
+type jwtTokens = {
+  access_token: string,
+  refreshToken: string,
+}
 
 @Injectable()
 export class AuthService {
@@ -26,14 +30,16 @@ export class AuthService {
   ) {}
 
   async loginWith2fa(user: User) {
-    const payload = { username: user.username, sub: user.uid, tfa: true };
+    const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
     console.log('new payload ', payload);
     return {
+  
       access_token: await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXP_H,
       }),
+  
       refreshToken: await this.jwtService.signAsync(payload, {
         secret: process.env.RFH_SECRET,
         expiresIn: process.env.RFH_EXP_D,
@@ -41,16 +47,18 @@ export class AuthService {
     };
   }
 
-  async setupMfa(userId: string) {
-    const user: User = await this.userService.findById(userId);
-    if (!user) throw new ForbiddenException();
+  async setupMfa(userId: string) : Promise<{ secret: string, otpauthUrl: string }> {
 
-    await this.userService.EnableTfa(userId);
-    return await this.userService.generateTFAsecret(user);
+
+    const user: User = await this.userService.findById(userId);
+  
+    if (!user) throw new ForbiddenException();
+    //await this.userService.EnableTfa(userId);
+    return await this.userService.generateTFAsecret(user.email, user.uid);
   }
 
-  async ValidateTfa(code: string, secret: string) {
-    return this.userService.ValidateTfa(code, secret);
+  async ValidateTfa(code: string, secret: string) : Promise<Boolean> {
+    return await this.userService.ValidateTfa(code, secret);
   }
 
   async generateQrCode(otpauthUrl: string) {
@@ -60,7 +68,7 @@ export class AuthService {
   async refreshToken(
     @Request() req,
     @Response({ passthrough: true }) res,
-  ): Promise<any> {
+  ): Promise<jwtTokens> {
     const refreshToken = req?.cookies['jwt-rft'];
 
     if (!refreshToken) throw new BadRequestException();
@@ -75,15 +83,11 @@ export class AuthService {
     console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
       console.log('Payload matchs rft in db  ', payload);
-      const tokens = await this.getTokens(
-        payload.sub,
-        payload.username,
-        payload.tfaEnabled,
-      );
+      const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled, payload.tfaAuth);
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
 
-      delete tokens.refreshToken;
+      // delete tokens.refreshToken;
       return tokens;
     }
     throw new BadRequestException();
@@ -122,7 +126,7 @@ export class AuthService {
     return null;
   }
 
-  async findOrCreate(code: string): Promise<User | null> {
+  async findOrCreate(code: string): Promise<jwtTokens> {
     const authToken = await axios({
       url: 'https://api.intra.42.fr/oauth/token',
       method: 'POST',
@@ -135,7 +139,7 @@ export class AuthService {
       },
     });
 
-    console.log(authToken);
+    // console.log(authToken);
 
     const token = authToken.data['access_token'];
 
@@ -148,12 +152,10 @@ export class AuthService {
     });
 
     let user = await this.userService.findByUsername(userData.data.login);
+
+    console.log('checking user');
     if (user) {
-      const tokens = await this.getTokens(
-        user.uid,
-        user.username,
-        user.tfaEnabled,
-      );
+      const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled, false);
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
@@ -166,24 +168,21 @@ export class AuthService {
     newUser.nickname = userData.data.displayname;
     // newUser.avatar = userData.data.image_url;
     newUser.username = userData.data.login;
-    newUser.avatar = 'https://api.multiavatar.com/' + newUser.nickname + '.svg';
+    newUser.avatar =
+      'https://api.multiavatar.com/' + newUser.nickname + '.svg';
     // const chatRoom = new ChatRoom;
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';
     await this.userService.create(newUser);
-    const tokens = await this.getTokens(
-      newUser.uid,
-      newUser.username,
-      newUser.tfaEnabled,
-    );
+    const tokens = await this.getTokens(newUser.uid, newUser.username, newUser.tfaEnabled, false);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     console.log('created New User and assigned RefreshToken');
     return tokens;
   }
 
-  async getTokens(uid: string, login: string, state: boolean): Promise<any> {
-    const payload = { username: login, sub: uid, tfaEnabled: state };
+  async getTokens(uid: string, login: string, state: boolean, logged: boolean): Promise<jwtTokens> {
+    const payload = { username: login, sub: uid, tfaEnabled: state, tfaAuth: logged };
 
     return {
       access_token: await this.jwtService.signAsync(payload, {

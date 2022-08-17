@@ -2,10 +2,9 @@ import { ChatRoom } from './chatRoom.entity';
 import { User } from './user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -17,12 +16,14 @@ export class ChatMessage {
   @Column({ unique: true })
   text: string;
 
+  @Column()
   @ManyToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid)
-  roomId: ChatRoom;
-
-  @ManyToOne((type) => User, (user) => user.uid)
-  ownerId: User;
+  roomId: string;
 
   @Column()
+  @ManyToOne((type) => User, (user) => user.uid)
+  ownerId: string;
+
+  @CreateDateColumn()
   createdAt: Date;
 }

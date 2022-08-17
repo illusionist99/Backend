@@ -54,19 +54,21 @@ export class UserService {
 
     return await this.userRepo.update(user.uid, {
       tfaEnabled: true,
+      
     });
   }
 
-  async generateTFAsecret(user: User) {
+
+  async generateTFAsecret(mail: string, uid: string) {
     const secret = otplib.authenticator.generateSecret();
 
     const otpauthUrl = otplib.authenticator.keyuri(
-      user.email,
+      mail,
       'Coolest Pong',
       secret,
     );
 
-    this.updateMfaKey(user.uid, secret);
+    this.updateMfaKey(uid, secret);
 
     return {
       secret,
@@ -85,16 +87,12 @@ export class UserService {
   }
 
   async searchUsers(uid: string, searchParam: string): Promise<User[]> {
+    searchParam = searchParam ? searchParam.trim() : '%%';
     const users: User[] = await this.userRepo
       .createQueryBuilder('user')
-      .where('user.username LIKE :s', { s: `%${searchParam}%` })
+      .where('user.username ILIKE :s', { s: `%${searchParam}%` })
       .getMany();
-    console.log(' users : ', users);
-    if (users.length !== 0) return users.filter((u) => u.uid != uid);
-
-    console.log('procceding to get random users if any ');
-    const defaults: User[] = (await this.userRepo.find({ take: 10 })).sort();
-    return defaults.filter((u) => u.uid != uid);
+    return users.filter((u) => u.uid != uid);
   }
 
   async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
@@ -165,6 +163,8 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { username } });
+
+
     if (user) {
       return {
         ...user,
@@ -180,7 +180,7 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { uid } });
-
+    console.log(user);
     if (user)
       return {
         ...user,

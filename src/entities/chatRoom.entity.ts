@@ -33,10 +33,12 @@ export class ChatRoom {
     )
     password: string;
 
+    @Column("text", { array: true, nullable: true })
     @OneToMany(() => User, user => user.uid)
     @JoinTable()
     admins: string[];
 
+    @Column("text", { array: true, nullable: true})
     @OneToMany(() => User, user => user.uid)
     @JoinTable()
     banned: string[];
