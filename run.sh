@@ -1,4 +1,4 @@
 npm install
 
-npm install -g npm@8.14.0
+npm install -g 
 npm run start:dev 

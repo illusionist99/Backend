@@ -1,4 +1,4 @@
-import { Controller, Request, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Request, Get, Post, Body, Param } from '@nestjs/common';
 import { CreateGameDto, UpdateGameDto } from 'src/dtos/game.dto';
 import { UserService } from 'src/user/user.service';
 import { GameService } from './game.service';

@@ -25,4 +25,5 @@ export class createChatRoomDto {
     password: string;
     admins: string[];
     banned: string[];
+    description: string;
 }

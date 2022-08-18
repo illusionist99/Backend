@@ -71,7 +71,7 @@
                 sendMessage() {
                     // this.messages.push(this.text);
 
-                    console.log(`send message to room ${this.joinedRoom} from ${this.Rooms}`);
+                    //console.log(`send message to room ${this.joinedRoom} from ${this.Rooms}`);
                     if (this.joinedRoom) {
                         this.socket.emit('msgToServer', {"room": this.joinedRoom, "message": this.text});
                         this.text = "";
@@ -93,7 +93,7 @@
                 ,
                 joinChatRoom() {
                     this.socket.emit('joinRoomToServer', this.ChatRoomName);
-                    console.log(` joining ${this.ChatRoomName}`);
+                    //console.log(` joining ${this.ChatRoomName}`);
                     this.joinedRoom = this.ChatRoomName;
                     // this.socket.join(this.ChatRoomName);
                     this.ChatRoomName = "";
@@ -104,7 +104,7 @@
                     this.joinedRoom = '';
                 },
                 Roomjoined(room) {
-                    console.log(`joined room succesfully : ${this.joinedRoom}`);
+                    //console.log(`joined room succesfully : ${this.joinedRoom}`);
                 }
             },
             created() { 
@@ -124,7 +124,7 @@
 
             
                     // const a = this.socket.emit('findAllRooms');
-                    // console.log(a);
+                    // //console.log(a);
                     
                     this.RoomCreated(room);
                 });

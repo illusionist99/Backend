@@ -1,10 +1,8 @@
-import { Controller, Get, Injectable, UseGuards } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { AuthGuard, PassportStrategy } from "@nestjs/passport";
+import { Controller } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-42";
 import { CreateUserDto } from "src/dtos/user.dto";
 import { User } from "src/entities/user.entity";
-import { AuthService } from "../auth.service";
 import * as bcrypt from 'bcrypt';
 import { UserService } from "src/user/user.service";
 
@@ -23,7 +21,7 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
     async validate(access_token: string, refreshToken: string, profile: any, cb: any) {
     
 
-        console.log('Calling validate Function throught 42 Contoller')
+        //console.log('Calling validate Function throught 42 Contoller')
 
         if (!profile)
             return null;
@@ -39,7 +37,7 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
         const saltOrRounds = 10;
         const hash = await bcrypt.hash("defaultpass", saltOrRounds);
         user.password = hash;
-        console.log(user);
+        //console.log(user);
         return cb(null, await this.userService.create(user));
     }
 

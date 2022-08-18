@@ -14,8 +14,9 @@ import { friendsRequest } from './entities/friendRequest.entity';
 import { friendsModule } from './friends/friends.module';
 import { GameModule } from './game/game.module';
 import { Game } from './entities/game.entity';
+import { tfaStatregy } from './auth/strategies/tfa.strategy';
 
-console.log(process.env);
+//console.log(process.env);
 
 @Module({
   imports: [
@@ -44,6 +45,6 @@ console.log(process.env);
     GameModule,
   ],
   controllers: [fortyTwoStrat, AppController],
-  providers: [JwtStartRefresh],
+  providers: [JwtStartRefresh, tfaStatregy],
 })
 export class AppModule {}

@@ -43,6 +43,10 @@ export class ChatRoom {
     @JoinTable()
     banned: string[];
 
+
+    @Column({default: "default room description"})
+    description: string;
+
 }
 
 

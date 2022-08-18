@@ -1,14 +1,9 @@
 import {
-  Body,
   ForbiddenException,
   Injectable,
   NotFoundException,
-  Request,
-  Response,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { use } from 'passport';
-import { send } from 'process';
 import { ChatService } from 'src/chat/chat.service';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
@@ -95,7 +90,7 @@ export class FriendsService {
     });
     return await Promise.all(
       reqs.map((r) => {
-        console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
+        //console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
         return (r.sender as any).uid === userId ? r.receiver : r.sender;
       }),
     );
