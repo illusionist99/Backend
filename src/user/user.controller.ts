@@ -31,7 +31,7 @@ export class UserController {
     @Request() req,
     @Query('query') searchParam: string,
   ): Promise<User[]> {
-    console.log('Query string received : ', searchParam);
+    //console.log('Query string received : ', searchParam);
     //if (!searchParam) throw new ForbiddenException();
     return this.userService.searchUsers(req.user.sub, searchParam);
   }
@@ -41,7 +41,7 @@ export class UserController {
     const user: User = await this.userService.findByUsername(username);
     if (!user) throw new NotFoundException();
 
-    console.log(req.user)
+    //console.log(req.user)
     const me = req.user.sub;
     let rule;
     if (me === user.uid) rule = 'me';
@@ -78,7 +78,7 @@ export class UserController {
   @UseInterceptors(FileInterceptor('file'))
   async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
     // if (!newNickName) throw new ForbiddenException
-    console.log('file is :', file);
+    //console.log('file is :', file);
     return this.userService.updateAvatar(uid, file);
   }
 

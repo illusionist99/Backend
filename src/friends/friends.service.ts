@@ -90,7 +90,7 @@ export class FriendsService {
     });
     return await Promise.all(
       reqs.map((r) => {
-        console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
+        //console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
         return (r.sender as any).uid === userId ? r.receiver : r.sender;
       }),
     );

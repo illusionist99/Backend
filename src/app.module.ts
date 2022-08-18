@@ -16,7 +16,7 @@ import { GameModule } from './game/game.module';
 import { Game } from './entities/game.entity';
 import { tfaStatregy } from './auth/strategies/tfa.strategy';
 
-console.log(process.env);
+//console.log(process.env);
 
 @Module({
   imports: [

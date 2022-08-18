@@ -26,7 +26,7 @@ export class ChatService {
   async create(createChatDto: createChatMessageDto) : Promise<ChatMessage> {
    
     this.chatMessageRepo.create(createChatDto);
-    console.log(createChatDto);
+    //console.log(createChatDto);
     return await this.chatMessageRepo.save(createChatDto);
 
   }
@@ -85,7 +85,7 @@ export class ChatService {
 
     const chat =  await this.chatRoomRepo.find({ where: {cid: id}, relations: ['messages'] });
 
-    console.log(chat);
+    //console.log(chat);
 
     return chat;
     // return `This action returns a #${id} chat`;

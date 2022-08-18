@@ -22,7 +22,7 @@ export class tfaStatregy extends PassportStrategy(Strategy, 'tfa') {
             (request: Request) => {
 
                 let data = request?.cookies['tfa-rft'];
-                console.log(" tfa Token currently used ",data);
+                //console.log(" tfa Token currently used ",data);
                 if (!data)
                     return null;
                 return data;
@@ -37,7 +37,7 @@ export class tfaStatregy extends PassportStrategy(Strategy, 'tfa') {
    async validate(payload: jwtTfa) {
     
 
-    console.log('strategy payload :', payload)
+    //console.log('strategy payload :', payload)
     const userId: string = payload.sub;
 
     const user = await this.userService.findById(userId);
@@ -46,7 +46,7 @@ export class tfaStatregy extends PassportStrategy(Strategy, 'tfa') {
 
     if (user.tfaSecret !== payload.secret)
         throw new UnauthorizedException();
-    // console.log('checking if tfa is enabled');
+    // //console.log('checking if tfa is enabled');
     if (user.tfaEnabled)
         return payload;
 

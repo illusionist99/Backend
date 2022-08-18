@@ -12,8 +12,9 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
-  }, 
+    origin: ['http://localhost'],
+    credentials: true,
+  },
 })
 @UseGuards(JwtWebSocketGuard)
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -27,17 +28,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
   
-    console.log('user Logged Out ', client.data);
+    //console.log('user Logged Out ', client.data);
 
     // update status 
-    // console.log('Disconnected : ', client.data);
+    // //console.log('Disconnected : ', client.data);
 
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
 
-    console.log('Logged in user ', client.data);
-    // console.log('Connected ', client.id);
+    //console.log('Logged in user ', client.data);
+    // //console.log('Connected ', client.id);
   }
 
 
@@ -46,10 +47,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   async createRoom( @ConnectedSocket() client: Socket, @MessageBody() roomName: string) : Promise<ChatRoom> {
 
 
-    // console.log('user created Room', client.data.user);
+    // //console.log('user created Room', client.data.user);
     let room : ChatRoom = new createChatRoomDto();
 
-    console.log(client.data.user.uid);
+    //console.log(client.data.user.uid);
     room.owner = client.data.user.uid;
     room.name = roomName;
     room.type = "public";
@@ -62,17 +63,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @WebSocketServer()
   private server: Server;
 
-  // @UseGuards(isAuthGuard)
   @SubscribeMessage('msgToServer')
   async create(@ConnectedSocket() client: Socket, @MessageBody() message: {room: string, message: string}) : Promise<ChatMessage> {
     
-    console.log('user send msg to server ', client.data.user);
+
+    console.log('client coonected', client.data)
+    //console.log('user send msg to server ', client.data.user);
     const chatMessage: ChatMessage = new createChatMessageDto;
-    console.log(message);
+    //console.log(client.data);
     chatMessage.ownerId = client.data.user.uid;
 
     const roomO = await this.chatService.findRoomByName(message['room']);
     if (!roomO) throw new WsException("Error"); 
+    console.log('sending message to rooom ', roomO)
     chatMessage.roomId = roomO;
     chatMessage.text = message['message'];
     this.server.to(message['room']).emit('msgToClient', {username: client.data.user.nickname, message: message['message']});
@@ -99,11 +102,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   leaveRoom(client: Socket, room: string ) {
 
     client.leave(room);
-    // console.log(req.user, "  we know user  ");
+    // //console.log(req.user, "  we know user  ");
     // const roomFound = this.chatService.findRoomByName(room);
     // if (roomFound) {  
       // this.server.socketsJoin(room);
-    // console.log(room);
+    // //console.log(room);
     // this.server.emit('joinRoomToClient', room);
     // }
     return room;
@@ -114,9 +117,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('messageToRoom')
   messageToRoom(@ConnectedSocket() client: Socket, @MessageBody() body: any) {
   
-    console.log(body, body['message']);
+    //console.log(body, body['message']);
     const chatMessage: ChatMessage = new createChatMessageDto;
-    console.log('Message To room from ', client.data.user);
+    //console.log('Message To room from ', client.data.user);
     chatMessage.ownerId = client.data.user.uid;
     chatMessage.roomId = body[1];
     chatMessage.text = body[0];

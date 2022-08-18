@@ -7,6 +7,7 @@ import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatController } from './chat.controller';
+import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 
 
 @Module({

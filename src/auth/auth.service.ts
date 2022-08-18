@@ -33,7 +33,7 @@ export class AuthService {
   async loginWith2fa(user: User) : Promise<jwtTokens> {
     const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
-    console.log('new payload ', payload);
+    //console.log('new payload ', payload);
     return {
   
       access_token: await this.jwtService.signAsync(payload, {
@@ -94,14 +94,14 @@ export class AuthService {
 
     const payload = await this.verifyRT(refreshToken);
 
-    console.log('Payload from cookie ', payload);
+    //console.log('Payload from cookie ', payload);
     const user = await this.userService.findByUsername(payload.username);
 
     if (!user) throw new ForbiddenException();
 
-    console.log(user.refreshToken);
+    //console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
-      console.log('Payload matchs rft in db  ', payload);
+      //console.log('Payload matchs rft in db  ', payload);
       const tokens = await this.getTokens(payload.sub, payload.username, payload.tfaEnabled, payload.tfaAuth);
 
       // await this.updateRtHash(payload.sub, tokens.refreshToken);
@@ -160,11 +160,11 @@ export class AuthService {
         },
       });
     } catch (error) {
-      console.log('error ')
+      //console.log('error ')
       return error;
     }
 
-    // console.log(authToken);
+    // //console.log(authToken);
     var token = authToken.data['access_token'];
     try {
 
@@ -180,9 +180,9 @@ export class AuthService {
     }
 
 
-    let user = await this.userService.findByUsername(userData.data.login);
+    var user = await this.userService.findByUsername(userData.data.login);
 
-    console.log('checking user');
+    //console.log('checking user', user);
     if (user) {
       const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled, false);
 
@@ -206,7 +206,7 @@ export class AuthService {
     const tokens = await this.getTokens(newUser.uid, newUser.username, false, false);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
-    console.log('created New User and assigned RefreshToken');
+    //console.log('created New User and assigned RefreshToken');
     return {newUser, tokens};
   }
 
