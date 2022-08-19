@@ -13,7 +13,7 @@ export class ChatMessage {
   @PrimaryGeneratedColumn('uuid')
   messageId: string;
 
-  @Column({ unique: true })
+  @Column()
   text: string;
 
   @Column()
