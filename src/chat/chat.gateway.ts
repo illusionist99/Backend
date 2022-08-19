@@ -1,4 +1,15 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, WsResponse, WsException, ConnectedSocket } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  WebSocketServer,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WsResponse,
+  WsException,
+  ConnectedSocket,
+} from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 import { Server, Socket } from 'socket.io';
@@ -8,8 +19,6 @@ import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 
-
-
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost'],
@@ -17,71 +26,75 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
   },
 })
 @UseGuards(JwtWebSocketGuard)
-export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(private readonly chatService: ChatService) {}
 
-
-  afterInit(server: Server) {
-
-  }
+  afterInit(server: Server) {}
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-  
-    //console.log('user Logged Out ', client.data);
-
-    // update status 
-    // //console.log('Disconnected : ', client.data);
-
+    //('user Logged Out ', client.data);
+    // update status
+    // //('Disconnected : ', client.data);
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
-
-    //console.log('Logged in user ', client.data);
-    // //console.log('Connected ', client.id);
+    //('Logged in user ', client.data);
+    // //('Connected ', client.id);
   }
-
-
 
   @SubscribeMessage('createRoom')
-  async createRoom( @ConnectedSocket() client: Socket, @MessageBody() roomName: string) : Promise<ChatRoom> {
+  async createRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomName: string,
+  ): Promise<ChatRoom> {
+    // //('user created Room', client.data.user);
+    const room: ChatRoom = new createChatRoomDto();
 
-
-    // //console.log('user created Room', client.data.user);
-    let room : ChatRoom = new createChatRoomDto();
-
-    //console.log(client.data.user.uid);
+    //(client.data.user.uid);
     room.owner = client.data.user.uid;
     room.name = roomName;
-    room.type = "public";
-    this.server.emit("RoomCreated", roomName);
+    room.type = 'public';
+    this.server.emit('RoomCreated', roomName);
     return this.chatService.createRoom(room);
   }
-
-  
 
   @WebSocketServer()
   private server: Server;
 
   @SubscribeMessage('msgToServer')
-  async create(@ConnectedSocket() client: Socket, @MessageBody() message: {room: string, message: string}) : Promise<ChatMessage> {
-    
-
-    console.log('client coonected', client.data)
-    //console.log('user send msg to server ', client.data.user);
-    const chatMessage: ChatMessage = new createChatMessageDto;
-    //console.log(client.data);
+  async create(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() message: { room: string; message: string },
+  ): Promise<ChatMessage> {
+    console.log('client coonected', client.data);
+    //('user send msg to server ', client.data.user);
+    const chatMessage: ChatMessage = new createChatMessageDto();
+    //(client.data);
     chatMessage.ownerId = client.data.user.uid;
 
-    const roomO = await this.chatService.findRoomByName(message['room']);
-    if (!roomO) throw new WsException("Error"); 
-    console.log('sending message to rooom ', roomO)
+    let roomO = await this.chatService.findRoomByName(message['room']);
+    // if (!roomO && message['room'] !== 'public') throw new WsException('Error');
+    // else if (!roomO && message['room'] === 'public')
+    if (!roomO) roomO = await this.createRoom(client, message['room']);
+    console.log(
+      'sending message to rooom ',
+      message['room'],
+      ' message is ',
+      message['message'],
+      roomO,
+    );
     chatMessage.roomId = roomO;
+    chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
-    this.server.to(message['room']).emit('msgToClient', {username: client.data.user.nickname, message: message['message']});
-    return  this.chatService.create(chatMessage);
+    this.server.to(message['room']).except(client.id).emit('msgToClient', {
+      userId: client.data.user.uid,
+      username: client.data.user.nickname,
+      text: message['message'],
+    });
+    return this.chatService.create(chatMessage);
   }
-
 
   // @SubscribeMessage('msgToServer')
   // async create(@MessageBody() createChatDto: createChatMessageDto) : Promise<ChatMessage> {
@@ -90,50 +103,44 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   //   return  this.chatService.create(createChatDto);
   // }
 
-
   @SubscribeMessage('joinRoomToServer')
-  joinRoom(client: Socket, room: string ) {
-
+  joinRoom(client: Socket, room: string) {
+    console.log('recieved room : ', room);
     client.join(room);
     // client.emit('joinedRoom', room);
   }
 
   @SubscribeMessage('leaveRoomToServer')
-  leaveRoom(client: Socket, room: string ) {
-
+  leaveRoom(client: Socket, room: string) {
     client.leave(room);
-    // //console.log(req.user, "  we know user  ");
+    // //(req.user, "  we know user  ");
     // const roomFound = this.chatService.findRoomByName(room);
-    // if (roomFound) {  
-      // this.server.socketsJoin(room);
-    // //console.log(room);
+    // if (roomFound) {
+    // this.server.socketsJoin(room);
+    // //(room);
     // this.server.emit('joinRoomToClient', room);
     // }
     return room;
     // return null;
   }
 
-
   @SubscribeMessage('messageToRoom')
   messageToRoom(@ConnectedSocket() client: Socket, @MessageBody() body: any) {
-  
-    //console.log(body, body['message']);
-    const chatMessage: ChatMessage = new createChatMessageDto;
-    //console.log('Message To room from ', client.data.user);
+    //(body, body['message']);
+    const chatMessage: ChatMessage = new createChatMessageDto();
+    //('Message To room from ', client.data.user);
     chatMessage.ownerId = client.data.user.uid;
     chatMessage.roomId = body[1];
     chatMessage.text = body[0];
-
+    chatMessage.username = client.data.user.username;
     this.server.to(body[0]).emit('msgToClientifRoom', body[1]);
-    return  this.chatService.create(chatMessage);
+    return this.chatService.create(chatMessage);
   }
 
   @SubscribeMessage('typing')
   async typing() {
-  
     return this.chatService.typing();
   }
-
 
   @SubscribeMessage('findAllRooms')
   async findAllRooms(@ConnectedSocket() client: Socket) {

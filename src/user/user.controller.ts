@@ -74,12 +74,11 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-
   // @Post(':id/avatar') // update avatar
   // @UseInterceptors(FileInterceptor('file'))
   // async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
   //   // if (!newNickName) throw new ForbiddenException
-  //   //console.log('file is :', file);
+  //   console.log('file is :', file);
   //   return this.userService.updateAvatar(uid, file);
   // }
 

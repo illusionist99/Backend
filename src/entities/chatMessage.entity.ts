@@ -13,7 +13,7 @@ export class ChatMessage {
   @PrimaryGeneratedColumn('uuid')
   messageId: string;
 
-  @Column({ unique: true })
+  @Column()
   text: string;
 
   @Column()
@@ -23,6 +23,9 @@ export class ChatMessage {
   @Column()
   @ManyToOne((type) => User, (user) => user.uid)
   ownerId: string;
+
+  @Column()
+  username: string;
 
   @CreateDateColumn()
   createdAt: Date;
