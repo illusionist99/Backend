@@ -15,11 +15,11 @@ export class User {
   @Column({ nullable: true })
   avatar: string; // 42 profile image link
 
-  @Column({
-    type: 'bytea',
-    nullable: true,
-  })
-  picture: Uint8Array; // can be updated as array
+  // @Column({
+  //   type: 'bytea',
+  //   nullable: true,
+  // })
+  // picture: Uint8Array; // can be updated as array
 
   @Column({ unique: true })
   username: string;

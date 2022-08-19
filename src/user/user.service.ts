@@ -90,18 +90,18 @@ export class UserService {
     searchParam = searchParam ? searchParam.trim() : '%%';
     const users: User[] = await this.userRepo
       .createQueryBuilder('user')
-      .where('user.username ILIKE :s', { s: `%${searchParam}%` })
+      .where('user.username LIKE :s', { s: `%${searchParam}%` })
       .getMany();
     return users.filter((u) => u.uid != uid);
   }
 
-  async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
-    const user = await this.findOne(uid);
+  // async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
+  //   const user = await this.findOne(uid);
 
-    if (!user) throw new ForbiddenException();
+  //   if (!user) throw new ForbiddenException();
 
-    return await this.userRepo.update(user.uid, { picture: avatar.buffer });
-  }
+  //   return await this.userRepo.update(user.uid, { picture: avatar.buffer });
+  // }
 
   async createLocal(username: string, password: string): Promise<User> {
     // 'This action adds a new user';
@@ -281,6 +281,6 @@ export class UserService {
   async leaderboard() {
     return this.userRepo
       .find()
-      .then((e) => e.sort((a, b) => b.level - a.level));
+      .then((e) => e.sort((a, b) => b.xp - a.xp));
   }
 }

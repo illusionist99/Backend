@@ -74,6 +74,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+<<<<<<< HEAD
   @Post(':id/avatar') // update avatar
   @UseInterceptors(FileInterceptor('file'))
   async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
@@ -81,6 +82,15 @@ export class UserController {
     //console.log('file is :', file);
     return this.userService.updateAvatar(uid, file);
   }
+=======
+  // @Post(':id/avatar') // update avatar
+  // @UseInterceptors(FileInterceptor('file'))
+  // async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
+  //   // if (!newNickName) throw new ForbiddenException
+  //   console.log('file is :', file);
+  //   return this.userService.updateAvatar(uid, file);
+  // }
+>>>>>>> 1d72a4930e3554a46d0d2932e1a3e3542497945f
 
   @Delete(':id')
   remove(@Param('id') id: string) {
