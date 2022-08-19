@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { Game } from 'src/entities/game.entity';
 import { CreateGameDto, UpdateGameDto } from 'src/dtos/game.dto';
 import { UserService } from 'src/user/user.service';
+import { ChatService } from 'src/chat/chat.service';
+import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
+import { ChatRoom } from 'src/entities/chatRoom.entity';
 
 @Injectable()
 export class GameService {
@@ -11,12 +14,21 @@ export class GameService {
     @InjectRepository(Game)
     private gameRepo: Repository<Game>,
     private userService: UserService,
+    private chatService: ChatService,
   ) {}
 
   async createGame(dto: CreateGameDto): Promise<Game> {
+    const room: ChatRoom = new createChatRoomDto();
+
+    room.owner = dto.gameId;
+    room.name = dto.gameId;
+    room.type = 'public';
+
+    await this.chatService.createRoom(room);
     // await this.userService.incrementLevel(winner);
     await this.userService.setStatus(dto.playerOne, 'playing');
     await this.userService.setStatus(dto.playerTwo, 'playing');
+
     return this.gameRepo.save(dto);
     // set users as ingame here
   }
@@ -29,12 +41,12 @@ export class GameService {
     if (dto.status === 1) {
       //game is done
       // here update users
-      let winner = game.winner
+      const winner = game.winner
         ? game.winner
         : game.scoreOne > game.scoreTwo
         ? game.playerOne
         : game.playerTwo;
-      let loser = game.playerOne === winner ? game.playerTwo : game.playerOne;
+      const loser = game.playerOne === winner ? game.playerTwo : game.playerOne;
 
       await this.userService.incrementWins(winner);
       await this.userService.incrementXp(winner, 20);
@@ -50,30 +62,31 @@ export class GameService {
     return this.gameRepo.find();
   }
   async getUserGameHistory(userId: string): Promise<any[]> {
-    return this.gameRepo.find({
-      // relations: ['playerOne', 'playerTwo'],
-      where: [
-        { playerOne: userId, status: 1 },
-        { playerTwo: userId, status: 1 },
-      ],
-      order: {
-        id: 'DESC',
-      },
-    }).then(async (games)=>{
-
-      let g = await Promise.all(
-        games.map(async (g)=>{
-          return {
-            ...g, 
-            playerOne: await this.userService.findById(g.playerOne),
-            playerTwo: await this.userService.findById(g.playerTwo)
-          }
-        })
-      );
-      return g;
-    });
+    return this.gameRepo
+      .find({
+        // relations: ['playerOne', 'playerTwo'],
+        where: [
+          { playerOne: userId, status: 1 },
+          { playerTwo: userId, status: 1 },
+        ],
+        order: {
+          id: 'DESC',
+        },
+      })
+      .then(async (games) => {
+        const g = await Promise.all(
+          games.map(async (g) => {
+            return {
+              ...g,
+              playerOne: await this.userService.findById(g.playerOne),
+              playerTwo: await this.userService.findById(g.playerTwo),
+            };
+          }),
+        );
+        return g;
+      });
   }
-  async getUserCurrentGame(userId: string) : Promise<Game[]> {
+  async getUserCurrentGame(userId: string): Promise<Game[]> {
     return this.gameRepo.find({
       where: [
         { playerOne: userId, status: 0 },
