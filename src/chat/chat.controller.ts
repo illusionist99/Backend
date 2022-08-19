@@ -22,12 +22,13 @@ export class ChatController {
     }
 
 
-    @Get('messages')
-    async getAllMessages(@Request() req) {
+    @Get('messages/:roomname')
+    async getAllMessages(@Param('roomname') roomName: string  ,@Request() req) {
 
+        if (!roomName) throw new Error('specify room name');
         const userId : string = req.user.sub;
         
-        return this.chatService.findAllMessages(userId);
+        return this.chatService.findAllMessages(userId, roomName);
     }
 
 

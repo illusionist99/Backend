@@ -8,6 +8,13 @@ import { Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 import * as bcrypt from 'bcrypt'
 
+type Message = {
+  text: string;
+  date: Date;
+  username: string;
+  userId: string;
+};
+
 @Injectable()
 export class ChatService {
   
@@ -65,13 +72,18 @@ export class ChatService {
     return chatRooms;
   }
 
-  async findAllMessages(uid: string) {
+  async findAllMessages(uid: string, roomName: string) {
 
-    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({ where: [
+    const chatRooms: ChatRoom = await this.chatRoomRepo.findOne({ where: [
     {
-      owner: uid,
+      name: roomName,
     },{}], relations: ["messages"]})
-    const Messages: {cid: string, messages: ChatMessage[]}[] = chatRooms.map((chatroom) => { return { cid: chatroom.cid , messages: chatroom.messages}; });
+    // text: string;
+    // date: string;
+    // username: string;
+    // userId: string;
+    const Messages: Message[] = chatRooms.messages.map((message) => { return { text: message
+    .text, date: message.createdAt, username: message.username, userId: message.ownerId}; });
 
     return Messages;
   }

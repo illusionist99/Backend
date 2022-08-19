@@ -9,4 +9,5 @@ export class createChatMessageDto {
     roomId: string;
     ownerId: string;
     createdAt: Date;
+    username: string;
 }

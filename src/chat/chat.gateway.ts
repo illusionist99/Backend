@@ -73,12 +73,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     //(client.data);
     chatMessage.ownerId = client.data.user.uid;
 
-    const roomO = await this.chatService.findRoomByName(message['room']);
-    if (!roomO) throw new WsException("Error"); 
+    let roomO = await this.chatService.findRoomByName(message['room']);
+    if (!roomO && message['room'] !== "public") throw new WsException("Error");
+    else if (!roomO && message['room'] === "public")
+      roomO = this.createRoom(client, "public");
     console.log('sending message to rooom ', message['room'], ' message is ', message['message'], roomO)
     chatMessage.roomId = roomO;
+    chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
-    this.server.to(message['room']).emit('msgToClient', {username: client.data.user.nickname, message: message['message']});
+    this.server.to(message['room']).except(client.id).emit('msgToClient', {userId: client.data.user.uid , username: client.data.user.nickname, text: message['message']});
     return  this.chatService.create(chatMessage);
   }
 
@@ -124,7 +127,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     chatMessage.ownerId = client.data.user.uid;
     chatMessage.roomId = body[1];
     chatMessage.text = body[0];
-
+    chatMessage.username = client.data.user.username;
     this.server.to(body[0]).emit('msgToClientifRoom', body[1]);
     return  this.chatService.create(chatMessage);
   }

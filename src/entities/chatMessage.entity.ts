@@ -24,6 +24,9 @@ export class ChatMessage {
   @ManyToOne((type) => User, (user) => user.uid)
   ownerId: string;
 
+  @Column()
+  username: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }
