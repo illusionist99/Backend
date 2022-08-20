@@ -34,6 +34,7 @@ export class AuthService {
 
     const user: User = await this.userService.findById(userId);
 
+    if (!user) throw new ForbiddenException();
     const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
     //console.log('new payload ', payload);
