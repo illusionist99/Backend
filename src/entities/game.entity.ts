@@ -16,6 +16,7 @@ export class Game {
   @Column({nullable: true})
   @OneToOne(type => ChatRoom, chatRoom => chatRoom.cid)
   chatroom: string;
+
   @Column({ nullable: false })
   mode: 'classic' | 'doublepaddle' | 'goalkeeper';
 
@@ -41,15 +42,3 @@ export class Game {
   @Column({ nullable: true })
   winner: string;
 }
-// - 42 ID
-// - Username
-// - Nickname
-// - Avatar (profile img link)
-// - Wins
-// - Losses
-// - XP
-// - Level
-// - Status : online | offline | playing | spectating
-// - Friendlist : User[]
-// - FriendRequests : User[]
-// - Blocklist : User[]
