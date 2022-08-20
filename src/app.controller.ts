@@ -108,7 +108,7 @@ export class AppController {
     res.cookie('tfa-rft', new Date(), { httpOnly: true });
 
     //console.log('code is valid ', isCodeValid);
-    const tokens = await this.authService.loginWith2fa(request.user);
+    const tokens = await this.authService.loginWith2fa(request.user.sub);
     if (!tokens) throw new ForbiddenException();
     res.cookie('jwt-rft', tokens['refreshToken'], { httpOnly: true });
     return { access_token: tokens['access_token'] };
@@ -126,7 +126,6 @@ export class AppController {
     code = code['code'];
     const {user , tokens} = await this.authService.findOrCreate(code);
 
-    // //console.log('after auth ',user, tokens)
     if (!tokens) throw new ForbiddenException();
     if (tokens['tfaEnabled'] === true) {
       
