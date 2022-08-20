@@ -108,7 +108,11 @@ export class AppController {
     res.cookie('tfa-rft', new Date(), { httpOnly: true });
 
     //console.log('code is valid ', isCodeValid);
-    return this.authService.loginWith2fa(request.user);
+    const tokens = await this.authService.loginWith2fa(request.user);
+    if (!tokens) throw new ForbiddenException();
+    res.cookie('jwt-rft', tokens['refreshToken'], { httpOnly: true });
+    return { access_token: tokens['access_token'] };
+
   }
 
  // redirect to 2fa/authenticate
