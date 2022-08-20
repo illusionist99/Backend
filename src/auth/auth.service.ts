@@ -30,12 +30,15 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async loginWith2fa(user: User) : Promise<jwtTokens> {
+  async loginWith2fa(userId: string) : Promise<jwtTokens> {
+
+    const user: User = await this.userService.findById(userId);
+
+    if (!user) throw new ForbiddenException();
     const payload = { username: user.username, sub: user.uid, tfaEnabled: true, tfaAuth: true };
 
     //console.log('new payload ', payload);
     return {
-  
       access_token: await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
         expiresIn: process.env.JWT_EXP_H,
