@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatService } from 'src/chat/chat.service';
@@ -109,11 +110,39 @@ export class FriendsService {
     return await this.friendRequestRepo.update(uid, { status });
   }
 
-  async blockFriendRequest(uid: string, blocked: boolean): Promise<any> {
+  async blockFriendRequest(
+    userId: string,
+    uid: string,
+    blocked: boolean,
+  ): Promise<any> {
     const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
 
     if (!friendship) throw new ForbiddenException();
+    if (friendship.receiver !== userId && friendship.sender !== userId)
+      throw new ForbiddenException();
+    return await this.friendRequestRepo.update(uid, {
+      blocked,
+      blockedBy: userId,
+    });
+  }
 
-    return await this.friendRequestRepo.update(uid, { blocked });
+  async unblockFriendRequest(
+    userId: string,
+    uid: string,
+    blocked: boolean,
+  ): Promise<any> {
+    const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
+
+    if (!friendship) throw new ForbiddenException();
+    if (friendship.receiver !== userId && friendship.sender !== userId)
+      throw new ForbiddenException();
+
+    if (userId === friendship.blockedBy) {
+      return await this.friendRequestRepo.update(uid, {
+        blocked,
+        blockedBy: userId,
+      });
+    }
+    throw new UnauthorizedException();
   }
 }

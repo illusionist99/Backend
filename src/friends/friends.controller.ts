@@ -62,12 +62,27 @@ export class FriendsController {
     return this.friendsService.getFriendRequestsForUser(uid);
   }
   @Post('block')
-  async blockFriendRequest(@Body() payload): Promise<friendsRequest> {
+  async blockFriendRequest(
+    @Request() req,
+    @Body() payload,
+  ): Promise<friendsRequest> {
     const uid: string = payload['uid'];
-    const blocked: boolean = payload['blocked'];
+    const userId: string = req.user.sub;
+
+    if (!uid || !userId) throw new ForbiddenException();
+    return this.friendsService.blockFriendRequest(userId, uid, true);
+  }
+
+  @Post('unblock')
+  async unblockFriendRequest(
+    @Request() req,
+    @Body() payload,
+  ): Promise<friendsRequest> {
+    const userId: string = req.user.sub;
+    const uid: string = payload['uid'];
 
     if (!uid) throw new ForbiddenException();
-    return this.friendsService.blockFriendRequest(uid, blocked);
+    return this.friendsService.unblockFriendRequest(userId, uid, false);
   }
 
   @Get('all')

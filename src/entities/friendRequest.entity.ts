@@ -29,4 +29,7 @@ export class friendsRequest {
 
   @Column()
   blocked: boolean;
+
+  @Column({ nullable: true })
+  blockedBy: string;
 }

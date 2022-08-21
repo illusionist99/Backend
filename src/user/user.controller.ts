@@ -42,24 +42,30 @@ export class UserController {
     if (!user) throw new NotFoundException();
 
     //console.log(req.user)
+
     const me = req.user.sub;
+    if (user.uid == req.user.sub)
+      return { ...user, rule: { rule: 'me', request: null } };
     let rule;
-    if (me === user.uid) rule = 'me';
-    else {
-      const r = await this.userService.findOneFriendRequest(me, user.uid);
-      if (r) {
-        if (r.status) {
-          rule = 'friends';
-        } else if (user.uid === r.sender) {
-          rule = 'sender';
-        } else {
-          rule = 'receiver';
-        }
+    // if (me === user.uid) rule = 'me';
+    // else {
+    // return {
+    //   user,
+    const r = await this.userService.findOneFriendRequest(me, user.uid);
+    // };
+    if (r) {
+      if (r.status) {
+        rule = 'friends';
+      } else if (user.uid === r.sender) {
+        rule = 'sender';
       } else {
-        rule = 'none';
+        rule = 'receiver';
       }
+    } else {
+      rule = 'none';
     }
-    return { ...user, rule };
+
+    return { ...user, rule: { rule, request: r } };
   }
 
   @Get()

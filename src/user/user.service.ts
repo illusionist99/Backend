@@ -25,9 +25,12 @@ export class UserService {
     private friendRepo: Repository<friendsRequest>,
   ) {}
 
-  public lvlFactor: number = 40;
+  public lvlFactor = 40;
 
-  async findOneFriendRequest(sender: string, receiver: string) {
+  async findOneFriendRequest(
+    sender: string,
+    receiver: string,
+  ): Promise<friendsRequest | null> {
     return await this.friendRepo.findOne({
       where: [
         {
@@ -54,10 +57,8 @@ export class UserService {
 
     return await this.userRepo.update(user.uid, {
       tfaEnabled: true,
-      
     });
   }
-
 
   async generateTFAsecret(mail: string, uid: string) {
     const secret = otplib.authenticator.generateSecret();
@@ -163,7 +164,6 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { username } });
-
 
     if (user) {
       return {
@@ -279,8 +279,6 @@ export class UserService {
   }
 
   async leaderboard() {
-    return this.userRepo
-      .find()
-      .then((e) => e.sort((a, b) => b.xp - a.xp));
+    return this.userRepo.find().then((e) => e.sort((a, b) => b.xp - a.xp));
   }
 }
