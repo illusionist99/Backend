@@ -12,9 +12,9 @@ export class Game {
   @Column({ unique: true, nullable: false })
   gameId: string;
 
-
-  @Column({nullable: true})
-  @OneToOne(type => ChatRoom, chatRoom => chatRoom.cid)
+  @Column({ nullable: true })
+  @OneToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid)
+  @JoinColumn()
   chatroom: string;
 
   @Column({ nullable: false })

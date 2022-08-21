@@ -18,13 +18,19 @@ export class GameService {
   ) {}
 
   async createGame(dto: CreateGameDto): Promise<Game> {
-    const room: ChatRoom = new createChatRoomDto();
+    try {
+      const room: ChatRoom = new createChatRoomDto();
 
-    room.owner = dto.gameId;
-    room.name = dto.gameId;
-    room.type = 'public';
+      room.owner = dto.playerOne;
+      room.name = dto.gameId;
+      room.type = 'public';
 
-    await this.chatService.createRoom(room);
+      await this.chatService.createRoom(room);
+      console.log('Created chat room', room);
+    } catch (e) {
+      console.log('couldnt create game chatroom');
+    }
+
     // await this.userService.incrementLevel(winner);
     await this.userService.setStatus(dto.playerOne, 'playing');
     await this.userService.setStatus(dto.playerTwo, 'playing');
@@ -54,8 +60,10 @@ export class GameService {
       await this.userService.incrementLosses(loser);
       await this.userService.setStatus(game.playerOne, 'online');
       await this.userService.setStatus(game.playerTwo, 'online');
+      console.log('saving game update');
+      return this.gameRepo.save(game);
     }
-    return this.gameRepo.save(game);
+    return;
   }
 
   async getAllGames(): Promise<Game[]> {
