@@ -46,7 +46,7 @@ export class UserController {
     const me = req.user.sub;
     if (user.uid == req.user.sub)
       return { ...user, rule: { rule: 'me', request: null } };
-    let rule;
+    let rule: string;
     // if (me === user.uid) rule = 'me';
     // else {
     // return {
@@ -54,7 +54,9 @@ export class UserController {
     const r = await this.userService.findOneFriendRequest(me, user.uid);
     // };
     if (r) {
-      if (r.status) {
+      if (r.blocked) {
+        rule = 'blocked';
+      } else if (r.status) {
         rule = 'friends';
       } else if (user.uid === r.sender) {
         rule = 'sender';
