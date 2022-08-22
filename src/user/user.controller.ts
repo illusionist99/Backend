@@ -70,14 +70,19 @@ export class UserController {
 
   @Get()
   currentUser(@Request() req) {
-
-    const userId : string = req.user.sub;
+    const userId: string = req.user.sub;
     return this.userService.findOne(userId);
   }
 
   @Get('id/:id')
   async findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @Patch('')
+  async updateOne(@Req() req: any, @Body() data: any) {
+    if (!data.uid) throw new Error('BRUD');
+    return this.userService.update(data.uid, data);
   }
 
   // @Post(':id/avatar') // update avatar

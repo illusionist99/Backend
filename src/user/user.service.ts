@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
   UploadedFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -45,7 +46,7 @@ export class UserService {
     });
   }
 
-  async ValidateTfa(code: string, secret: string): Promise<Boolean> {
+  async ValidateTfa(code: string, secret: string): Promise<boolean> {
     //console.log('validatinng ', code, secret);
     return authenticator.verify({ token: code, secret });
   }
@@ -192,13 +193,14 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
+    console.log('updating user', updateUserDto);
     const user = await this.userRepo.find({
       where: {
         uid: id,
       },
     });
-
-    let updated = Object.assign(updateUserDto, user);
+    if (!user) throw new UnauthorizedException();
+    const updated = Object.assign(updateUserDto, user);
     return await this.userRepo.save(updated);
   }
 
@@ -252,7 +254,7 @@ export class UserService {
 
     //console.log('incrementing xp');
 
-    let lvlFactor = this.lvlFactor;
+    const lvlFactor = this.lvlFactor;
 
     let xpNeededForLevel = user.level * lvlFactor;
     let TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
