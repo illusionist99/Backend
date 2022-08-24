@@ -50,7 +50,11 @@ export class FriendsService {
       ],
     });
   }
-  async addFriend(userId : string,sender: string, receiver: string): Promise<friendsRequest> {
+  async addFriend(
+    userId: string,
+    sender: string,
+    receiver: string,
+  ): Promise<friendsRequest> {
     // const rcvUser : User = await this.userService.findById(receiver);
     // const sndUser : User = await this.userService.findById(sender);
 
@@ -70,7 +74,7 @@ export class FriendsService {
     createdRoom.createdAt = new Date();
     createdRoom.owner = sender;
     createdRoom.admins = [sender, receiver];
-    createdRoom.members = [sender === userId ? receiver: sender];
+    createdRoom.members = [sender === userId ? receiver : sender];
     createdRoom.type = 'private';
 
     await this.chatService.createRoom(createdRoom);
@@ -143,7 +147,8 @@ export class FriendsService {
     } else console.log('friendship already exists ');
     if (friendship.receiver !== userId && friendship.sender !== userId)
       throw new ForbiddenException();
-    return await this.friendRequestRepo.update(friendship.uid, {
+    return await this.friendRequestRepo.save({
+      ...friendship,
       blocked,
       blockedBy: userId,
     });
