@@ -54,7 +54,8 @@ export class UserController {
     const r = await this.userService.findOneFriendRequest(me, user.uid);
     // };
     if (r) {
-      if (r.status) {
+      if (r.blocked) rule = 'blocked';
+      else if (r.status) {
         rule = 'friends';
       } else if (user.uid === r.sender) {
         rule = 'sender';
@@ -70,8 +71,7 @@ export class UserController {
 
   @Get()
   currentUser(@Request() req) {
-
-    const userId : string = req.user.sub;
+    const userId: string = req.user.sub;
     return this.userService.findOne(userId);
   }
 

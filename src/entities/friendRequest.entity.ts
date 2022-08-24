@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -14,11 +15,13 @@ export class friendsRequest {
   uid: string;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.sntF)
+  @ManyToMany(() => User, (user) => user.sntF)
+  @JoinTable()
   sender: string;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.recF)
+  @ManyToMany(() => User, (user) => user.recF)
+  @JoinTable()
   receiver: string;
 
   @CreateDateColumn()
