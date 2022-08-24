@@ -46,7 +46,7 @@ export class UserController {
     const me = req.user.sub;
     if (user.uid == req.user.sub)
       return { ...user, rule: { rule: 'me', request: null } };
-    let rule;
+    let rule: string;
     // if (me === user.uid) rule = 'me';
     // else {
     // return {
@@ -54,8 +54,9 @@ export class UserController {
     const r = await this.userService.findOneFriendRequest(me, user.uid);
     // };
     if (r) {
-      if (r.blocked) rule = 'blocked';
-      else if (r.status) {
+      if (r.blocked) {
+        rule = 'blocked';
+      } else if (r.status) {
         rule = 'friends';
       } else if (user.uid === r.sender) {
         rule = 'sender';
@@ -78,6 +79,12 @@ export class UserController {
   @Get('id/:id')
   async findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @Patch('')
+  async updateOne(@Req() req: any, @Body() data: any) {
+    if (!data.uid) throw new Error('BRUD');
+    return this.userService.update(data.uid, data);
   }
 
   // @Post(':id/avatar') // update avatar
