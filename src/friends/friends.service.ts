@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { use } from 'passport';
 import { ChatService } from 'src/chat/chat.service';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
@@ -113,15 +114,36 @@ export class FriendsService {
 
   async blockFriendRequest(
     userId: string,
-    uid: string,
+    toBlockuid: string,
     blocked: boolean,
   ): Promise<any> {
-    const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
+    let friendship = await this.friendRequestRepo.findOne({
+      where: [
+        {
+          sender: userId,
+          receiver: toBlockuid,
+        },
+        {
+          sender: toBlockuid,
+          receiver: userId,
+        },
+      ],
+    });
 
-    if (!friendship) throw new ForbiddenException();
+    if (!friendship) {
+      friendship = this.friendRequestRepo.create({
+        sender: userId,
+        receiver: toBlockuid,
+        status: false,
+        blocked: true,
+        blockedBy: userId,
+      });
+      await this.friendRequestRepo.save(friendship);
+      console.log('friendship created ');
+    } else console.log('friendship already exists ');
     if (friendship.receiver !== userId && friendship.sender !== userId)
       throw new ForbiddenException();
-    return await this.friendRequestRepo.update(uid, {
+    return await this.friendRequestRepo.update(friendship.uid, {
       blocked,
       blockedBy: userId,
     });
@@ -139,10 +161,7 @@ export class FriendsService {
       throw new ForbiddenException();
 
     if (userId === friendship.blockedBy) {
-      return await this.friendRequestRepo.update(uid, {
-        blocked,
-        blockedBy: userId,
-      });
+      return await this.friendRequestRepo.delete(uid);
     }
     throw new UnauthorizedException();
   }
