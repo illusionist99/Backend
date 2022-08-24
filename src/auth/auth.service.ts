@@ -163,11 +163,11 @@ export class AuthService {
         },
       });
     } catch (error) {
-      //console.log('error ')
+      console.log('error ', process.env.clientID, process.env.clientSecret, process.env.callbackURL)
       return error;
     }
 
-    // //console.log(authToken);
+    console.log('authToken: ', authToken);
     var token = authToken.data['access_token'];
     try {
 
@@ -181,11 +181,11 @@ export class AuthService {
     } catch( error ) {
       return error;
     }
-
+    console.log(' user DAta : ', userData.data);
 
     var user = await this.userService.findByUsername(userData.data.login);
 
-    //console.log('checking user', user);
+    console.log('checking user', user);
     if (user) {
       const tokens = await this.getTokens(user.uid, user.username, user.tfaEnabled, false);
 
@@ -209,7 +209,7 @@ export class AuthService {
     const tokens = await this.getTokens(newUser.uid, newUser.username, false, false);
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
-    //console.log('created New User and assigned RefreshToken');
+    console.log('created New User and assigned RefreshToken');
     return {newUser, tokens};
   }
 

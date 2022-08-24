@@ -8,7 +8,7 @@ export class BanDto {
   until: Date;
 }
 
-export type roomType = 'private' | 'public' | 'protected';
+export type roomType = 'private' | 'public' | 'protected' | 'privategroup';
 
 export class createChatRoomDto {
   type: roomType;
@@ -20,4 +20,5 @@ export class createChatRoomDto {
   admins?: string[];
   banned?: string[];
   description?: string;
+  members?: string[];
 }

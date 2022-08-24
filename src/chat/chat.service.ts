@@ -60,11 +60,26 @@ export class ChatService {
         {
           owner: uid,
         },
-        {},
+        {
+          members: uid
+        },
       ],
-      relations: ['messages'],
+      relations: ['admins', 'members', 'owner'],
     });
-    return chatRooms;
+    // id: string;
+    // name: string;
+    // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status 
+  
+    return chatRooms.map((chatRoom) => {
+      return ({
+        id: chatRoom.cid,
+        name: chatRoom.name,
+        owner: chatRoom.owner,
+        admins: chatRoom.admins,
+        members: chatRoom.members,
+        type: chatRoom.type,
+      });
+    })
   }
 
   async findAllMessages(uid: string, roomName: string) {

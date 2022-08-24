@@ -30,7 +30,7 @@ export class User {
   @Column({ unique: true, nullable: true })
   email: string;
 
-  @OneToMany((type) => ChatRoom, (chatroom) => chatroom.owner, {
+  @OneToMany((type) => ChatRoom, (chatroom) => chatroom.cid, {
     cascade: true,
   })
   @JoinTable({})

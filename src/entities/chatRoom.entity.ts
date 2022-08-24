@@ -3,12 +3,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   JoinTable,
   ManyToOne,
   OneToMany,
-  OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './user.entity';
@@ -23,7 +20,10 @@ export class ChatRoom {
   type: roomType;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.uid)
+  @ManyToOne(() => User, (user) => user.uid, {
+    cascade: true,
+  })
+  @JoinTable()
   owner: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.roomId, {
@@ -35,19 +35,27 @@ export class ChatRoom {
   @CreateDateColumn()
   createdAt?: Date;
 
+  @OneToMany(() => User, (user) => user.uid, {
+    cascade: true,
+  })
+  @JoinTable()
+  members?: string[];
+
   @Column({ unique: true, nullable: true })
   name: string;
 
   @Column({ nullable: true })
   password?: string;
 
-  @Column('text', { array: true, nullable: true })
-  @OneToMany(() => User, (user) => user.uid)
+  @OneToMany(() => User, (user) => user.uid, {
+    cascade: true,
+  })
   @JoinTable()
   admins?: string[];
 
-  @Column('text', { array: true, nullable: true })
-  @OneToMany(() => User, (user) => user.uid)
+  @OneToMany(() => User, (user) => user.uid , { 
+    cascade: true,
+  })
   @JoinTable()
   banned?: string[];
 
