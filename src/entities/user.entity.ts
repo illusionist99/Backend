@@ -31,7 +31,6 @@ export class User {
   email: string;
 
   @OneToMany((type) => ChatRoom, (chatroom) => chatroom.cid, {
-    cascade: true,
   })
   @JoinTable({})
   chatRooms: ChatRoom[];

@@ -60,12 +60,11 @@ export class ChatService {
         {
           owner: uid,
         },
-        {
-          members: uid
-        },
       ],
-      relations: ['admins', 'members', 'owner'],
+      // relations: ['members'],
     });
+
+    console.log('chat rooms ', chatRooms);
     // id: string;
     // name: string;
     // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status 

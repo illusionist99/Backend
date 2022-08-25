@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToOne,
   OneToMany,
@@ -14,32 +15,29 @@ import { createChatRoomDto, roomType } from 'src/dtos/chatRoom.dto';
 @Entity()
 export class ChatRoom {
   @PrimaryGeneratedColumn('uuid')
-  cid?: string;
+  cid: string;
 
   @Column()
   type: roomType;
 
   @Column()
   @ManyToOne(() => User, (user) => user.uid, {
-    cascade: true,
   })
-  @JoinTable()
   owner: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.roomId, {
-    cascade: true,
+    // cascade: true,
   })
-  @JoinTable({})
   messages: ChatMessage[];
 
   @CreateDateColumn()
   createdAt?: Date;
 
-  @OneToMany(() => User, (user) => user.uid, {
-    cascade: true,
+  @Column('text',{ array: true, default: []})
+  @OneToMany(() => User, (user) => user.chatRooms, {
+
   })
-  @JoinTable()
-  members?: string[];
+  members: string[];
 
   @Column({ unique: true, nullable: true })
   name: string;
@@ -47,17 +45,18 @@ export class ChatRoom {
   @Column({ nullable: true })
   password?: string;
 
-  @OneToMany(() => User, (user) => user.uid, {
-    cascade: true,
-  })
-  @JoinTable()
-  admins?: string[];
+  @Column('text',{ array: true, default: [] })
+  @OneToMany(() => User, (user) => user.chatRooms, {
 
-  @OneToMany(() => User, (user) => user.uid , { 
-    cascade: true,
   })
-  @JoinTable()
-  banned?: string[];
+  admins: string[];
+
+
+  @Column('text',{ array: true, default: [] })
+  @OneToMany(() => User, (user) => user.uid , { 
+
+  })
+  banned: string[];
 
   @Column({ default: 'default room description' })
   description?: string;

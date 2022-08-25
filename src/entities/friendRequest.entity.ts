@@ -15,12 +15,12 @@ export class friendsRequest {
   uid: string;
 
   @Column()
-  @ManyToMany(() => User, (user) => user.sntF)
+  @ManyToOne(() => User, (user) => user.sntF)
   @JoinTable()
   sender: string;
 
   @Column()
-  @ManyToMany(() => User, (user) => user.recF)
+  @ManyToOne(() => User, (user) => user.recF)
   @JoinTable()
   receiver: string;
 
