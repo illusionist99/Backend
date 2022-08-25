@@ -1,4 +1,5 @@
-import { Entity, JoinTable } from 'typeorm';
+import { join } from 'path';
+import { Entity, JoinTable, ManyToMany } from 'typeorm';
 import { PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ChatRoom } from './chatRoom.entity';
 import { friendsRequest } from './friendRequest.entity';
@@ -30,9 +31,13 @@ export class User {
   @Column({ unique: true, nullable: true })
   email: string;
 
-  @OneToMany((type) => ChatRoom, (chatroom) => chatroom.cid, {
+  // @Column()
+  @OneToMany((type) => ChatRoom, chatroom => chatroom.cid, {
+    cascade: true
   })
-  @JoinTable({})
+  @JoinTable({
+    name: 'userasmember'
+  })
   chatRooms: ChatRoom[];
 
   @Column({})

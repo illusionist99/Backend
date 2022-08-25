@@ -53,7 +53,9 @@ export class ChatGateway
     const room: ChatRoom = new createChatRoomDto();
 
     //(client.data.user.uid);
-    room.owner = client.data.user.uid;
+    // room.owner = client.data.user.uid;
+    room.members = [client.data.user.uid];
+    room.admins = [client.data.user.uid];
     room.name = roomName;
     room.type = 'public';
     this.server.emit('RoomCreated', roomName);

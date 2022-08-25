@@ -39,11 +39,12 @@ export class FriendsController {
   }
 
   @Post('accept')
-  async acceptFriendRequest(@Body() payload): Promise<friendsRequest> {
+  async acceptFriendRequest(@Request() req, @Body() payload): Promise<friendsRequest> {
     const uid: string = payload['uid'];
-
+    const userId: string = req.user.sub;
+  
     if (!uid) throw new ForbiddenException();
-    return this.friendsService.UpdateFriendInvite(uid, true);
+    return this.friendsService.UpdateFriendInvite(userId, uid, true);
   }
 
   @Post('decline')

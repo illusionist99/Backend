@@ -1,5 +1,5 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
@@ -32,7 +32,7 @@ export class ChatService {
     return await this.chatMessageRepo.save(createChatDto);
   }
 
-  async createRoom(
+  async createRoom( 
     createChatRoom: createChatRoomDto,
   ): Promise<createChatRoomDto> {
     if (createChatRoom.type === 'protected' && !createChatRoom.password)
@@ -40,9 +40,8 @@ export class ChatService {
     else if (createChatRoom.type === 'protected' && createChatRoom.password)
       createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
 
-    return await this.chatRoomRepo.save(
-      this.chatRoomRepo.create(createChatRoom),
-    );
+    this.chatRoomRepo.create(createChatRoom);
+    return await this.chatRoomRepo.save(createChatRoom);
   }
 
   async joinRoom() {}
@@ -55,25 +54,45 @@ export class ChatService {
   }
 
   async findAllRooms(uid: string) {
-    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      where: [
-        {
-          owner: uid,
-        },
-      ],
-      // relations: ['members'],
-    });
+    
+    
+    // let chatRooms : any = await this.userRepo.findOne({
+    //   where: {
+    //     uid: uid,
+    //   },
+    //   relations: ['chatRooms'],
+    // })
 
+    // "user.uid IN (:...members)")
+    
+    // console.log('000000', chatRooms);
+    // chatRooms = chatRooms.chatRooms;
+    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
+      where:
+      {
+        // members: [await this.userRepo.findOne({ where: {uid} })],
+      }  
+    ,
+      relations: ['members'],
+    });
+    console.log('chat rooms  0', chatRooms);
+    const result = [];
+    chatRooms.map( (chatroom) => { for (var id of chatroom.members) {
+
+      console.log(id);
+      if (id.uid === uid)
+      result.push(chatroom);
+    } })
     console.log('chat rooms ', chatRooms);
-    // id: string;
-    // name: string;
-    // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status 
+    // // id: string;
+    // // name: string;
+    // // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status 
   
-    return chatRooms.map((chatRoom) => {
+    return result.map((chatRoom) => {
       return ({
         id: chatRoom.cid,
         name: chatRoom.name,
-        owner: chatRoom.owner,
+        // owner: chatRoom.owner,
         admins: chatRoom.admins,
         members: chatRoom.members,
         type: chatRoom.type,

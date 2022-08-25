@@ -55,8 +55,8 @@ export class FriendsService {
     sender: string,
     receiver: string,
   ): Promise<friendsRequest> {
-    // const rcvUser : User = await this.userService.findById(receiver);
-    // const sndUser : User = await this.userService.findById(sender);
+    const rcvUser : User = await this.userService.findById(receiver);
+    const sndUser : User = await this.userService.findById(sender);
 
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
 
@@ -68,16 +68,17 @@ export class FriendsService {
     friendRequest.date = new Date();
     friendRequest.blocked = false;
 
+
     const createdRoom: createChatRoomDto = new createChatRoomDto();
 
     createdRoom.name = null;
-    createdRoom.createdAt = new Date();
-    createdRoom.owner = sender;
-    createdRoom.admins = [sender, receiver];
-    createdRoom.members = [sender === userId ? receiver : sender];
+    createdRoom.admins = [rcvUser, sndUser];
+    createdRoom.members = [rcvUser, sndUser];
     createdRoom.type = 'private';
-
+  
+    console.log('created Room', createdRoom);
     await this.chatService.createRoom(createdRoom);
+
     this.friendRequestRepo.create(friendRequest);
     return await this.friendRequestRepo.save(friendRequest);
   }
@@ -108,8 +109,8 @@ export class FriendsService {
       relations: ['sender'],
     });
   }
-  async UpdateFriendInvite(uid: string, status: boolean): Promise<any> {
-    const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
+  async UpdateFriendInvite(userId: string, uid: string, status: boolean): Promise<any> {
+    const friendship = await this.friendRequestRepo.findOne({ where: { uid }, relations: ['sender', 'receiver'] });
 
     if (!friendship) throw new ForbiddenException();
 

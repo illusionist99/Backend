@@ -15,13 +15,15 @@ export class friendsRequest {
   uid: string;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.sntF)
-  @JoinTable()
+  @ManyToOne(() => User, (user) => user.sntF, {
+    cascade: true,
+  })
   sender: string;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.recF)
-  @JoinTable()
+  @ManyToOne(() => User, (user) => user.recF, {
+    cascade: true,
+  })
   receiver: string;
 
   @CreateDateColumn()

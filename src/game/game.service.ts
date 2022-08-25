@@ -21,7 +21,7 @@ export class GameService {
     try {
       const room: ChatRoom = new createChatRoomDto();
 
-      room.owner = dto.playerOne;
+      // room.owner = dto.playerOne;
       room.name = dto.gameId;
       room.type = 'public';
 
