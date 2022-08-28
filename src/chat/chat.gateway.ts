@@ -92,8 +92,9 @@ export class ChatGateway
     chatMessage.text = message['message'];
     this.server.to(message['room']).except(client.id).emit('msgToClient', {
       userId: client.data.user.uid,
-      username: client.data.user.nickname,
+      username: client.data.user.username,
       text: message['message'],
+      room: message['room'],
     });
     return this.chatService.create(chatMessage);
   }
