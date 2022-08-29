@@ -83,13 +83,11 @@ export class FriendsService {
     console.log('created Room', createdRoom);
     await this.chatService.createRoom(createdRoom);
 
-    this.friendRequestRepo.create(friendRequest);
-    this.friendsGateway.server.emit('notification', {
-      type: 'request',
-      sender: sndUser.username,
-    });
+    this.friendsGateway.emitNotification('request', sender, receiver);
 
-    return await this.friendRequestRepo.save(friendRequest);
+    return await this.friendRequestRepo.save(
+      this.friendRequestRepo.create(friendRequest),
+    );
   }
 
   async getAllFriendRooms(uid: string): Promise<any[]> {
@@ -129,10 +127,12 @@ export class FriendsService {
     });
 
     if (!friendship) throw new ForbiddenException();
-    this.friendsGateway.server.emit('notification', {
-      type: 'accept',
-      sender: userId,
-    });
+    this.friendsGateway.emitNotification(
+      'accept',
+      (friendship.receiver as any).uid,
+      (friendship.sender as any).uid,
+    );
+
     return await this.friendRequestRepo.update(uid, { status });
   }
 

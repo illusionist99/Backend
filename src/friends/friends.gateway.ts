@@ -43,7 +43,10 @@ export class FriendsGateway
     //('user Logged Out ', client.data);
     // update status
     // //('Disconnected : ', client.data);
+    this.userIdToSocketId.delete(client.data.user.uid);
   }
+
+  private userIdToSocketId: Map<string, string> = new Map<string, string>();
 
   async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
     const cookieName = 'jwt-rft';
@@ -66,6 +69,9 @@ export class FriendsGateway
     if (user) {
       console.log('authenticated user in wsguard', user);
       client.data.user = user;
+
+      this.userIdToSocketId.set(user.uid, client.id);
+
       return true;
     }
     return client.conn.close();
@@ -88,5 +94,19 @@ export class FriendsGateway
     console.log('received event from  : ', client.id, client.data.user as any);
     // client.join(room);
     // client.emit('joinedRoom', room);
+  }
+
+  async emitNotification(
+    type: 'request' | 'accept',
+    sender: string,
+    receiver: string,
+  ) {
+    if (this.userIdToSocketId.has(receiver))
+      this.server
+        .to(this.userIdToSocketId.get(receiver))
+        .emit('notification', { type, sender });
+    else {
+      console.log(receiver, 'is disconnected');
+    }
   }
 }
