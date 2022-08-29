@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,18 +14,22 @@ import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { friendsRequest } from '../entities/friendRequest.entity';
+import { FriendsGateway } from './friends.gateway';
 
 @Injectable()
 export class FriendsService {
   constructor(
     private userService: UserService,
+    @Inject('FRIENDS_GATEWAY') private readonly friendsGateway: FriendsGateway,
 
     @InjectRepository(friendsRequest)
     private friendRequestRepo: Repository<friendsRequest>,
     private chatService: ChatService,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) {
+    // this.friendsGateway.server.emit('notification', { hello: 'world' });
+  }
 
   async delete(uid: string) {
     const friendRequest = await this.friendRequestRepo.findOne({
@@ -55,8 +60,8 @@ export class FriendsService {
     sender: string,
     receiver: string,
   ): Promise<friendsRequest> {
-    const rcvUser : User = await this.userService.findById(receiver);
-    const sndUser : User = await this.userService.findById(sender);
+    const rcvUser: User = await this.userService.findById(receiver);
+    const sndUser: User = await this.userService.findById(sender);
 
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
 
@@ -68,18 +73,22 @@ export class FriendsService {
     friendRequest.date = new Date();
     friendRequest.blocked = false;
 
-
     const createdRoom: createChatRoomDto = new createChatRoomDto();
 
     createdRoom.name = null;
     createdRoom.admins = [rcvUser, sndUser];
     createdRoom.members = [rcvUser, sndUser];
     createdRoom.type = 'private';
-  
+
     console.log('created Room', createdRoom);
     await this.chatService.createRoom(createdRoom);
 
     this.friendRequestRepo.create(friendRequest);
+    this.friendsGateway.server.emit('notification', {
+      type: 'request',
+      sender: sndUser.username,
+    });
+
     return await this.friendRequestRepo.save(friendRequest);
   }
 
@@ -109,11 +118,21 @@ export class FriendsService {
       relations: ['sender'],
     });
   }
-  async UpdateFriendInvite(userId: string, uid: string, status: boolean): Promise<any> {
-    const friendship = await this.friendRequestRepo.findOne({ where: { uid }, relations: ['sender', 'receiver'] });
+  async UpdateFriendInvite(
+    userId: string,
+    uid: string,
+    status: boolean,
+  ): Promise<any> {
+    const friendship = await this.friendRequestRepo.findOne({
+      where: { uid },
+      relations: ['sender', 'receiver'],
+    });
 
     if (!friendship) throw new ForbiddenException();
-
+    this.friendsGateway.server.emit('notification', {
+      type: 'accept',
+      sender: userId,
+    });
     return await this.friendRequestRepo.update(uid, { status });
   }
 

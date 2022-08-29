@@ -32,11 +32,11 @@ export class User {
   email: string;
 
   // @Column()
-  @OneToMany((type) => ChatRoom, chatroom => chatroom.cid, {
-    cascade: true
+  @OneToMany((type) => ChatRoom, (chatroom) => chatroom.cid, {
+    // cascade: true
   })
   @JoinTable({
-    name: 'userasmember'
+    name: 'userasmember',
   })
   chatRooms: ChatRoom[];
 

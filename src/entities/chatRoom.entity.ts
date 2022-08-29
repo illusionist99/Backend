@@ -5,7 +5,6 @@ import {
   Entity,
   JoinColumn,
   JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -34,12 +33,12 @@ export class ChatRoom {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column('text',{ array: true, default: []}, )
-  @ManyToMany(() => User, {
+  @Column('text', { array: true, default: [] })
+  @OneToMany(() => User, (user) => user.chatRooms, {
     cascade: true,
   })
   @JoinTable({
-    name: 'userasmember'
+    name: 'userasmember',
   })
   members: User[];
 
@@ -49,22 +48,21 @@ export class ChatRoom {
   @Column({ nullable: true })
   password?: string;
 
-  @Column('text',{ array: true, default: [] })
-  @ManyToMany(() => User, {
+  @Column('text', { array: true, default: [] })
+  @OneToMany(() => User, (user) => user.chatRooms, {
     // cascade: true,
   })
   @JoinTable({
-    name: 'userasadmin'
+    name: 'userasadmin',
   })
   admins: User[];
 
-
-  @Column('text',{ array: true, default: [] })
-  @ManyToMany(() => User , { 
+  @Column('text', { array: true, default: [] })
+  @OneToMany(() => User, (user) => user.chatRooms, {
     // cascade: true,
   })
   @JoinTable({
-    name: 'userasbanned'
+    name: 'userasbanned',
   })
   banned: User[];
 

@@ -40,9 +40,9 @@ export class ChatService {
     else if (createChatRoom.type === 'protected' && createChatRoom.password)
       createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
 
-    // this.chatRoomRepo.create(createChatRoom);
-    console.log('BRUUUH', createChatRoom);
-    return await this.chatRoomRepo.save(createChatRoom);
+    return await this.chatRoomRepo.save(
+      this.chatRoomRepo.create(createChatRoom),
+    );
   }
 
   async joinRoom() {}
@@ -67,20 +67,23 @@ export class ChatService {
     // console.log('000000', chatRooms);
     // chatRooms = chatRooms.chatRooms;
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      where: {
-        // members: [await this.userRepo.findOne({ where: {uid} })],
-      },
-      relations: ['members'],
+      // where: {
+      //   // members: [await this.userRepo.findOne({ where: {uid} })],
+      // },
+      // relations: ['members'],
     });
-    console.log('chat rooms  0', chatRooms);
+    // console.log('chat rooms  0', chatRooms);
     const result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
-        console.log(id);
-        if (id.uid === uid) result.push(chatroom);
+        console.log('retrieved user :', id);
+        // id = JSON.parse(id as unknown as string);
+        console.log('retrieved user after:', id);
+
+        if ((id as unknown as string) === uid) result.push(chatroom);
       }
     });
-    console.log('chat rooms ', chatRooms);
+    console.log('chat rooms ', result);
     // // id: string;
     // // name: string;
     // // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status

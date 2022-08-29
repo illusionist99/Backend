@@ -17,14 +17,12 @@ import { ChatRoom } from 'src/entities/chatRoom.entity';
 export class FriendsController {
   constructor(private friendsService: FriendsService) {}
 
-
-
   @Post('add')
   async addFriend(@Request() req, @Body() payload): Promise<friendsRequest> {
     const sender: string = payload['sender'];
     const receiver: string = payload['receiver'];
-    const userId : string = req.user.sub;
-  
+    const userId: string = req.user.sub;
+
     const friendRequest: friendsRequest = await this.friendsService.findOne(
       sender,
       receiver,
@@ -39,11 +37,15 @@ export class FriendsController {
   }
 
   @Post('accept')
-  async acceptFriendRequest(@Request() req, @Body() payload): Promise<friendsRequest> {
+  async acceptFriendRequest(
+    @Request() req,
+    @Body() payload,
+  ): Promise<friendsRequest> {
     const uid: string = payload['uid'];
     const userId: string = req.user.sub;
-  
+
     if (!uid) throw new ForbiddenException();
+
     return this.friendsService.UpdateFriendInvite(userId, uid, true);
   }
 
@@ -57,7 +59,7 @@ export class FriendsController {
   async getAllFriendRooms(@Request() req): Promise<ChatRoom[]> {
     const uid: string = req.user.sub;
 
-    console.log('Getting all Rooms ')
+    console.log('Getting all Rooms ');
     if (!uid) throw new ForbiddenException();
     return this.friendsService.getAllFriendRooms(uid);
   }
