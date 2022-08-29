@@ -18,9 +18,9 @@ export class ChatController {
   constructor(private chatService: ChatService) {}
 
   @Post('createRoom')
-  async createRoom(@Body() createRoom: createChatRoomDto): Promise<ChatRoom> {
-
-    return this.chatService.createRoom(createRoom);
+  async createRoom(@Body() createRoom: createChatRoomDto): Promise<void> {
+    await this.chatService.createRoom(createRoom);
+    return ;
   }
 
   @Get('messages/:roomname')

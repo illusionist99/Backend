@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -33,13 +34,9 @@ export class ChatRoom {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column('text', { array: true, default: [] })
-  @OneToMany(() => User, (user) => user.chatRooms, {
-    cascade: true,
-  })
-  @JoinTable({
-    name: 'userasmember',
-  })
+  // @Column('text', { array: true, default: [] })
+  @ManyToMany(() => User)
+  @JoinTable()
   members: User[];
 
   @Column({ unique: true, nullable: true })
@@ -48,22 +45,14 @@ export class ChatRoom {
   @Column({ nullable: true })
   password?: string;
 
-  @Column('text', { array: true, default: [] })
-  @OneToMany(() => User, (user) => user.chatRooms, {
-    // cascade: true,
-  })
-  @JoinTable({
-    name: 'userasadmin',
-  })
+  // @Column('text', { array: true, default: [] })
+  @ManyToMany(() => User)
+  @JoinTable()
   admins: User[];
 
-  @Column('text', { array: true, default: [] })
-  @OneToMany(() => User, (user) => user.chatRooms, {
-    // cascade: true,
-  })
-  @JoinTable({
-    name: 'userasbanned',
-  })
+  // @Column('text', { array: true, default: [] })
+  @ManyToMany(() => User)
+  @JoinTable()
   banned: User[];
 
   @Column({ default: 'default room description' })

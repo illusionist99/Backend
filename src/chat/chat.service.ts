@@ -40,9 +40,12 @@ export class ChatService {
     else if (createChatRoom.type === 'protected' && createChatRoom.password)
       createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
 
-    return await this.chatRoomRepo.save(
-      this.chatRoomRepo.create(createChatRoom),
-    );
+    // createChatRoom.members.push(createChatRoom['owner']);
+
+    console.log('creation ', createChatRoom); 
+    // this.chatRoomRepo.create(createChatRoom);
+
+    return await this.chatRoomRepo.save(createChatRoom);
   }
 
   async joinRoom() {}
@@ -70,9 +73,9 @@ export class ChatService {
       // where: {
       //   // members: [await this.userRepo.findOne({ where: {uid} })],
       // },
-      // relations: ['members'],
+      relations: ['members'],
     });
-    // console.log('chat rooms  0', chatRooms);
+    console.log('chat rooms  0', chatRooms);
     const result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
@@ -80,7 +83,7 @@ export class ChatService {
         // id = JSON.parse(id as unknown as string);
         console.log('retrieved user after:', id);
 
-        if ((id as unknown as string) === uid) result.push(chatroom);
+        if (id.uid === uid) result.push(chatroom);
       }
     });
     console.log('chat rooms ', result);

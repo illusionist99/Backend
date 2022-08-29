@@ -31,15 +31,6 @@ export class User {
   @Column({ unique: true, nullable: true })
   email: string;
 
-  // @Column()
-  @OneToMany((type) => ChatRoom, (chatroom) => chatroom.cid, {
-    // cascade: true
-  })
-  @JoinTable({
-    name: 'userasmember',
-  })
-  chatRooms: ChatRoom[];
-
   @Column({})
   refreshToken: string;
 
