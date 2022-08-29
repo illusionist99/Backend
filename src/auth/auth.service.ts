@@ -170,7 +170,7 @@ export class AuthService {
         },
       });
     } catch (error) {
-      console.log(error);
+      //console.log(error);
       console.log(
         'error ',
         process.env.clientID,
@@ -180,7 +180,7 @@ export class AuthService {
       return error;
     }
 
-    console.log('authToken: ', authToken);
+    //console.log('authToken: ', authToken);
     const token = authToken.data['access_token'];
     try {
       var userData = await axios({
@@ -193,11 +193,11 @@ export class AuthService {
     } catch (error) {
       return error;
     }
-    console.log(' user DAta : ', userData.data);
+    //console.log(' user DAta : ', userData.data);
 
     const user = await this.userService.findByUsername(userData.data.login);
 
-    console.log('checking user', user);
+    //console.log('checking user', user);
     if (user) {
       const tokens = await this.getTokens(
         user.uid,
@@ -230,7 +230,7 @@ export class AuthService {
     );
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
-    console.log('created New User and assigned RefreshToken');
+    //console.log('created New User and assigned RefreshToken');
     return { newUser, tokens };
   }
 
