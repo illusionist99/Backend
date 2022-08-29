@@ -54,6 +54,7 @@ export class ChatGateway
 
     //(client.data.user.uid);
     // room.owner = client.data.user.uid;
+    console.log('BBBbruh');
     room.members = [client.data.user.uid];
     room.admins = [client.data.user.uid];
     room.name = roomName;
@@ -70,7 +71,7 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() message: { room: string; message: string },
   ): Promise<ChatMessage> {
-    console.log('client coonected', client.data);
+    console.log('client connected', client.data);
     //('user send msg to server ', client.data.user);
     const chatMessage: ChatMessage = new createChatMessageDto();
     //(client.data);

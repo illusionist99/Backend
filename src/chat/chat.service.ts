@@ -32,7 +32,7 @@ export class ChatService {
     return await this.chatMessageRepo.save(createChatDto);
   }
 
-  async createRoom( 
+  async createRoom(
     createChatRoom: createChatRoomDto,
   ): Promise<createChatRoomDto> {
     if (createChatRoom.type === 'protected' && !createChatRoom.password)
@@ -40,7 +40,8 @@ export class ChatService {
     else if (createChatRoom.type === 'protected' && createChatRoom.password)
       createChatRoom.password = await bcrypt.hash(createChatRoom.password, 10);
 
-    this.chatRoomRepo.create(createChatRoom);
+    // this.chatRoomRepo.create(createChatRoom);
+    console.log('BRUUUH', createChatRoom);
     return await this.chatRoomRepo.save(createChatRoom);
   }
 
@@ -54,8 +55,6 @@ export class ChatService {
   }
 
   async findAllRooms(uid: string) {
-    
-    
     // let chatRooms : any = await this.userRepo.findOne({
     //   where: {
     //     uid: uid,
@@ -64,40 +63,38 @@ export class ChatService {
     // })
 
     // "user.uid IN (:...members)")
-    
+
     // console.log('000000', chatRooms);
     // chatRooms = chatRooms.chatRooms;
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      where:
-      {
+      where: {
         // members: [await this.userRepo.findOne({ where: {uid} })],
-      }  
-    ,
+      },
       relations: ['members'],
     });
     console.log('chat rooms  0', chatRooms);
     const result = [];
-    chatRooms.map( (chatroom) => { for (var id of chatroom.members) {
-
-      console.log(id);
-      if (id.uid === uid)
-      result.push(chatroom);
-    } })
+    chatRooms.map((chatroom) => {
+      for (const id of chatroom.members) {
+        console.log(id);
+        if (id.uid === uid) result.push(chatroom);
+      }
+    });
     console.log('chat rooms ', chatRooms);
     // // id: string;
     // // name: string;
-    // // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status 
-  
+    // // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status
+
     return result.map((chatRoom) => {
-      return ({
+      return {
         id: chatRoom.cid,
         name: chatRoom.name,
         // owner: chatRoom.owner,
         admins: chatRoom.admins,
         members: chatRoom.members,
         type: chatRoom.type,
-      });
-    })
+      };
+    });
   }
 
   async findAllMessages(uid: string, roomName: string) {
