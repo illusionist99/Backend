@@ -9,14 +9,13 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ChatController } from './chat.controller';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 
-
 @Module({
   providers: [ChatGateway, ChatService],
-  imports: [TypeOrmModule.forFeature([User, ChatRoom, ChatMessage]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([User, ChatRoom, ChatMessage]),
+    AuthModule,
+  ],
   controllers: [ChatController],
-  exports: [ChatService]
+  exports: [ChatService],
 })
-export class ChatModule {
-
-
-}
+export class ChatModule {}

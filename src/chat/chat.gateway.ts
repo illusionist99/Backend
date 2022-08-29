@@ -24,6 +24,7 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
     origin: ['http://localhost', 'http://localhost:8000'],
     credentials: true,
   },
+  namespace: '/',
 })
 @UseGuards(JwtWebSocketGuard)
 export class ChatGateway

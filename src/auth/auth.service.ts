@@ -28,7 +28,6 @@ export class AuthService {
     private userService: UserService,
     private readonly configService: ConfigService,
   ) {}
-
   async loginWith2fa(userId: string): Promise<jwtTokens> {
     const user: User = await this.userService.findById(userId);
 

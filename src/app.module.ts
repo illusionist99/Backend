@@ -39,9 +39,9 @@ import { tfaStatregy } from './auth/strategies/tfa.strategy';
       synchronize: true, // to remove when finished
     }),
     UserModule,
+    friendsModule,
     ChatModule,
     AuthModule,
-    friendsModule,
     GameModule,
   ],
   controllers: [fortyTwoStrat, AppController],

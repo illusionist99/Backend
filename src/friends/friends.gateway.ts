@@ -13,6 +13,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Injectable, UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
+import { User } from 'src/entities/user.entity';
+import { flatMap } from 'rxjs';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from 'src/user/user.service';
+import { ConfigService } from '@nestjs/config';
+import { Repository } from 'typeorm';
 
 @Injectable()
 @WebSocketGateway({
@@ -22,11 +29,10 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
   },
   namespace: 'friends',
 })
-@UseGuards(JwtWebSocketGuard)
 export class FriendsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor() {}
+  constructor(private readonly authService: AuthService) {}
 
   afterInit(server: Server) {
     this.server = server;
@@ -39,10 +45,30 @@ export class FriendsGateway
     // //('Disconnected : ', client.data);
   }
 
-  handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
-    //('Logged in user ', client.data);
-    // //('Connected ', client.id)
-    console.log('FRIENDS GATEWAY CONNECTION', client.id);
+  async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
+    const cookieName = 'jwt-rft';
+    try {
+      var cookies = client.handshake.headers.cookie
+        .split(';')
+        .map((c) => c.trim())
+        .filter((cookie) => {
+          return cookie.substring(0, cookieName.length) === cookieName;
+        });
+      console.log('cookies ', cookies);
+    } catch (error) {
+      console.log('cookies arent found');
+      return error;
+    }
+    const refreshToken: string = cookies[0].split('=')[1];
+    console.log('ws cookie extractd token ', refreshToken);
+    const payload = await this.authService.verifyRT(refreshToken);
+    const user: User = await this.authService.ValidatePayload(payload);
+    if (user) {
+      console.log('authenticated user in wsguard', user);
+      client.data.user = user;
+      return true;
+    }
+    return client.conn.close();
   }
 
   @WebSocketServer()
@@ -54,11 +80,13 @@ export class FriendsGateway
   //   this.server.emit('msgToClient', createChatDto);
   //   return  this.chatService.create(createChatDto);
   // }
+  // @UseGuards(JwtWebSocketGuard)
+  @SubscribeMessage('notifications')
+  async test(@ConnectedSocket() client: Socket, room: string): Promise<void> {
+    if (!client.data.user) return;
 
-  @SubscribeMessage('TEST')
-  joinRoom(client: Socket, room: string) {
-    console.log('recieved room : ', room);
-    client.join(room);
+    console.log('received event from  : ', client.id, client.data.user as any);
+    // client.join(room);
     // client.emit('joinedRoom', room);
   }
 }
