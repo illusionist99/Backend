@@ -131,9 +131,7 @@ export class ChatService {
     return await this.chatRoomRepo.save(createChatRoom);
   }
 
-  async joinRoom() {}
 
-  async typing() {}
 
   async findAll(): Promise<ChatMessage[]> {
     return await this.chatMessageRepo.find({ relations: ['ownerId'] });
@@ -141,44 +139,23 @@ export class ChatService {
   }
 
   async findAllRooms(uid: string) {
-    // let chatRooms : any = await this.userRepo.findOne({
-    //   where: {
-    //     uid: uid,
-    //   },
-    //   relations: ['chatRooms'],
-    // })
 
-    // "user.uid IN (:...members)")
-
-    // console.log('000000', chatRooms);
-    // chatRooms = chatRooms.chatRooms;
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      // where: {
-      //   // members: [await this.userRepo.findOne({ where: {uid} })],
-      // },
       relations: ['members'],
     });
     console.log('chat rooms  0', chatRooms);
     const result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
-        console.log('retrieved user :', id);
-        // id = JSON.parse(id as unknown as string);
-        console.log('retrieved user after:', id);
-
         if (id.uid === uid) result.push(chatroom);
       }
     });
-    console.log('chat rooms ', result);
-    // // id: string;
-    // // name: string;
-    // // status: 'online' | 'offline' | 'playing' | 'spectating'; // members status
 
     return result.map((chatRoom) => {
       return {
         id: chatRoom.cid,
         name: chatRoom.name,
-        // owner: chatRoom.owner,
+        owner: chatRoom.owner,
         admins: chatRoom.admins,
         members: chatRoom.members,
         type: chatRoom.type,
@@ -197,10 +174,7 @@ export class ChatService {
       relations: ['messages', 'banned'],
     });
     if (chatRoom.banned.map((banUser) => { return banUser.uid === uid })) return new Error(' User is Banned can\'t send messages ');
-    // text: string;
-    // date: string;
-    // username: string;
-    // userId: string;
+
     const Messages: Message[] = chatRoom?.messages.map((message) => {
       return {
         text: message.text,
@@ -214,18 +188,17 @@ export class ChatService {
   }
 
   async findRoomByName(name: string): Promise<any> {
+  
     return await this.chatRoomRepo.findOne({ where: { name: name } });
   }
+
   async findOne(id: string): Promise<ChatRoom[]> {
     const chat = await this.chatRoomRepo.find({
       where: { cid: id },
       relations: ['messages'],
     });
 
-    //console.log(chat);
-
     return chat;
-    // return `This action returns a #${id} chat`;
   }
 
   // update(id: number, updateChatDto: UpdateChatDto) {
