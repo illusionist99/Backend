@@ -10,6 +10,7 @@ import { ChatModule } from 'src/chat/chat.module';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
 import { User } from 'src/entities/user.entity';
+import { NotificationModule } from 'src/notifications/notification.module';
 import { UserModule } from 'src/user/user.module';
 import { FriendsController } from './friends.controller';
 import { FriendsGateway } from './friends.gateway';
@@ -21,6 +22,7 @@ import { FriendsService } from './friends.service';
     ChatModule,
     UserModule,
     AuthModule,
+    NotificationModule,
   ],
   controllers: [FriendsController],
   providers: [

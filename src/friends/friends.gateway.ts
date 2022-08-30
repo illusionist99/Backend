@@ -63,11 +63,9 @@ export class FriendsGateway
       return error;
     }
     const refreshToken: string = cookies[0].split('=')[1];
-    console.log('ws cookie extractd token ', refreshToken);
     const payload = await this.authService.verifyRT(refreshToken);
     const user: User = await this.authService.ValidatePayload(payload);
     if (user) {
-      console.log('authenticated user in wsguard', user);
       client.data.user = user;
 
       this.userIdToSocketId.set(user.uid, client.id);

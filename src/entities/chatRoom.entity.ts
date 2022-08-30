@@ -22,8 +22,7 @@ export class ChatRoom {
   type: roomType;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.uid, {
-  })
+  @ManyToOne(() => User, (user) => user.uid, {})
   owner: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.roomId, {
