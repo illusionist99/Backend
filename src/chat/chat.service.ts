@@ -194,8 +194,9 @@ export class ChatService {
         },
         {},
       ],
-      relations: ['messages'],
+      relations: ['messages', 'banned'],
     });
+    if (chatRoom.banned.map((banUser) => { return banUser.uid === uid })) return new Error(' User is Banned can\'t send messages ');
     // text: string;
     // date: string;
     // username: string;
