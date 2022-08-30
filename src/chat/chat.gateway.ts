@@ -18,6 +18,9 @@ import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from 'src/entities/user.entity';
 
 @WebSocketGateway({
   cors: {
@@ -30,7 +33,7 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService, @InjectRepository(User) private readonly repoUser: Repository<User>) {}
 
   afterInit(server: Server) {}
 
@@ -52,13 +55,14 @@ export class ChatGateway
   ): Promise<ChatRoom> {
     // //('user created Room', client.data.user);
     const room: ChatRoom = new createChatRoomDto();
-
+    const user: User = await this.repoUser.findOne({where: {uid: client.data.user.uid}});
     //(client.data.user.uid);
     // room.owner = client.data.user.uid;
     console.log('BBBbruh');
-    room.members = [client.data.user.uid];
-    room.admins = [client.data.user.uid];
+    room.members = [user];
+    room.admins = [user];
     room.name = roomName;
+    room.owner = client.data.user.uid;
     room.type = 'public';
     this.server.emit('RoomCreated', roomName);
     return this.chatService.createRoom(room);

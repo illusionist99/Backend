@@ -13,6 +13,7 @@ export type roomType = 'private' | 'public' | 'protected' | 'privategroup';
 export class createChatRoomDto {
   cid: string;
   type: roomType;
+  owner: string;
   messages: ChatMessage[];
   createdAt: Date;
   name: string;

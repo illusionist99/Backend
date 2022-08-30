@@ -21,10 +21,10 @@ export class ChatRoom {
   @Column()
   type: roomType;
 
-  // @Column()
-  // @ManyToOne(() => User, (user) => user.uid, {
-  // })
-  // owner: string;
+  @Column()
+  @ManyToOne(() => User, (user) => user.uid, {
+  })
+  owner: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.roomId, {
     cascade: true,

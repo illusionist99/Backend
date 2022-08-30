@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
@@ -26,11 +26,94 @@ export class ChatService {
     private userRepo: Repository<User>,
   ) {}
 
+
+  async joinRoomAsMember(userId: string, cid: string, password: string) {
+  
+    const user: User = await this.userRepo.findOne({where: {uid: userId}});
+
+    if (!user) throw new ForbiddenException();
+
+    const chatRoom : ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['members'],
+    });
+    if (!chatRoom || (!(chatRoom.type === 'protected') && !(chatRoom.type === 'public'))) throw new ForbiddenException();
+    if (chatRoom.type === 'protected') {
+      const isMatch : boolean =  bcrypt.compare(password, chatRoom.password);
+      if (!isMatch) return Error('Wrong Password !!');
+    }
+    await this.chatRoomRepo.update(cid, {
+      members: [...chatRoom.members, user],
+    });
+  }
+
+  async deleteRoom(uid: string, cid: string) {
+  
+    const chatRoom : ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+    });
+
+    if (!chatRoom || chatRoom.owner !== uid) throw new ForbiddenException();
+
+    await this.chatRoomRepo.delete(cid);
+
+  }
+  
+  async setAdmin(uid: string, cid: string, newadmin:  string) : Promise<any> {
+
+    const chatRoom : ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins'],
+    });
+
+    if (!chatRoom) throw new UnauthorizedException();
+    if (chatRoom.admins.find((admin) => { return admin.uid === newadmin})) return new Error(' User is Already an Admin');
+    if (chatRoom.owner === uid || chatRoom.admins.map((admin) => { return admin.uid === uid})) {
+
+      await this.chatRoomRepo.update(cid, {
+        admins: [...chatRoom.admins, await this.userRepo.findOne({where: {uid: newadmin}})],
+      });
+    }
+    
+  }
+  
+  async ban(uid: string, cid: string, banned:  string) : Promise<any> {
+
+    const chatRoom : ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins', 'banned', 'members'],
+    });
+
+    if (!chatRoom) throw new UnauthorizedException();
+    if (chatRoom.admins.find((admin) => { return admin.uid === banned}) && uid != chatRoom.owner) return new Error(' Can\'t Ban An Admin Only By Owner');
+    if (chatRoom.owner === uid || (chatRoom.admins.map((admin) => { return admin.uid === uid}) && chatRoom.members.map((member) => {member.uid === banned}))) {
+
+
+      await this.chatRoomRepo.update(cid, {
+        members: chatRoom.members.filter((member) => { return member.uid === banned}),
+        banned: [...chatRoom.banned, await this.userRepo.findOne({where: {uid: banned}})],
+        admins: chatRoom.admins.filter((admin) => { return admin.uid === banned}),
+      });
+    }
+    
+  }
+  
   async create(createChatDto: createChatMessageDto): Promise<ChatMessage> {
     this.chatMessageRepo.create(createChatDto);
     //console.log(createChatDto);
     return await this.chatMessageRepo.save(createChatDto);
   }
+
+
+
 
   async createRoom(
     createChatRoom: createChatRoomDto,

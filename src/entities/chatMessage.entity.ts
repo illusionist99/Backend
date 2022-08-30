@@ -16,6 +16,7 @@ export class ChatMessage {
   @Column()
   text: string;
 
+
   @Column()
   @ManyToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid)
   roomId: string;
