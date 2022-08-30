@@ -11,6 +11,7 @@ import { ChatService } from 'src/chat/chat.service';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { User } from 'src/entities/user.entity';
+import { NotificationService } from 'src/notifications/notification.service';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { friendsRequest } from '../entities/friendRequest.entity';
@@ -25,6 +26,7 @@ export class FriendsService {
     @InjectRepository(friendsRequest)
     private friendRequestRepo: Repository<friendsRequest>,
     private chatService: ChatService,
+    private notificationService: NotificationService,
     @InjectRepository(User)
     private userRepo: Repository<User>,
   ) {
@@ -73,17 +75,12 @@ export class FriendsService {
     friendRequest.date = new Date();
     friendRequest.blocked = false;
 
-    const createdRoom: createChatRoomDto = new createChatRoomDto();
-
-    createdRoom.name = null;
-    createdRoom.admins = [rcvUser, sndUser];
-    createdRoom.members = [rcvUser, sndUser];
-    createdRoom.type = 'private';
-
-    console.log('created Room', createdRoom);
-    await this.chatService.createRoom(createdRoom);
-
+    // notification
     this.friendsGateway.emitNotification('request', sender, receiver);
+    this.notificationService.createNotification(
+      receiver,
+      JSON.stringify({ type: 'request', sender }),
+    );
 
     return await this.friendRequestRepo.save(
       this.friendRequestRepo.create(friendRequest),
@@ -132,7 +129,27 @@ export class FriendsService {
       (friendship.receiver as any).uid,
       (friendship.sender as any).uid,
     );
+    this.notificationService.createNotification(
+      (friendship.sender as any).uid,
+      JSON.stringify({
+        type: 'accept',
+        sender: (friendship.receiver as any).uid,
+      }),
+    );
+    const createdRoom: createChatRoomDto = new createChatRoomDto();
 
+    createdRoom.name = null;
+    createdRoom.admins = [friendship.receiver as any, friendship.sender as any];
+    createdRoom.members = [
+      friendship.receiver as any,
+      friendship.sender as any,
+    ];
+    createdRoom.owner = (friendship.receiver as any).uid;
+
+    createdRoom.type = 'private';
+
+    console.log('created Room', createdRoom);
+    await this.chatService.createRoom(createdRoom);
     return await this.friendRequestRepo.update(uid, { status });
   }
 

@@ -15,6 +15,8 @@ import { friendsModule } from './friends/friends.module';
 import { GameModule } from './game/game.module';
 import { Game } from './entities/game.entity';
 import { tfaStatregy } from './auth/strategies/tfa.strategy';
+import { NotificationModule } from './notifications/notification.module';
+import { Notification } from './entities/notification.entity';
 
 //console.log(process.env);
 
@@ -35,7 +37,14 @@ import { tfaStatregy } from './auth/strategies/tfa.strategy';
       // logging: true,
       subscribers: [],
       migrations: [],
-      entities: [User, ChatMessage, ChatRoom, friendsRequest, Game],
+      entities: [
+        User,
+        ChatMessage,
+        ChatRoom,
+        friendsRequest,
+        Game,
+        Notification,
+      ],
       synchronize: true, // to remove when finished
     }),
     UserModule,
@@ -43,6 +52,7 @@ import { tfaStatregy } from './auth/strategies/tfa.strategy';
     ChatModule,
     AuthModule,
     GameModule,
+    NotificationModule,
   ],
   controllers: [fortyTwoStrat, AppController],
   providers: [JwtStartRefresh, tfaStatregy],
