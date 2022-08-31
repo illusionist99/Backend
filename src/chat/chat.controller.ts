@@ -36,10 +36,10 @@ export class ChatController {
 
   // ban user from chat room 
   @Post('ban')
-  async setbanned(@Body() data: {cid: string, banned: string}, @Request() req) : Promise<void> {
+  async setbanned(@Body() data: {roomId: string, banned: string}, @Request() req) : Promise<void> {
 
     const userId : string = req.user.sub;
-    const chatRoom : string = data.cid;
+    const chatRoom : string = data.roomId;
     const banned : string = data.banned;
 
     if (!userId || !chatRoom || !banned) throw new UnauthorizedException();
@@ -49,10 +49,10 @@ export class ChatController {
   // add members to chat room, join rooms
   
   @Post('join')
- async joinAsMember(@Request() req, @Body() data: {cid: string, password: string}) {
+ async joinAsMember(@Request() req, @Body() data: {roomId: string, password: string}) {
 
   const userId : string = req.user.sub;
-  const chatRoom : string = data.cid;
+  const chatRoom : string = data.roomId;
   const hash : string = data.password;
 
 

@@ -61,6 +61,7 @@ export class ChatGateway
     console.log('BBBbruh');
     room.members = [user];
     room.admins = [user];
+    room.banned = [];
     room.name = roomName;
     room.owner = client.data.user.uid;
     room.type = 'public';
@@ -144,11 +145,6 @@ export class ChatGateway
     chatMessage.username = client.data.user.username;
     this.server.to(body[0]).emit('msgToClientifRoom', body[1]);
     return this.chatService.create(chatMessage);
-  }
-
-  @SubscribeMessage('typing')
-  async typing() {
-    return this.chatService.typing();
   }
 
   @SubscribeMessage('findAllRooms')

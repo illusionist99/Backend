@@ -44,9 +44,11 @@ export class ChatService {
       const isMatch : boolean =  bcrypt.compare(password, chatRoom.password);
       if (!isMatch) return Error('Wrong Password !!');
     }
-    await this.chatRoomRepo.update(cid, {
-      members: [...chatRoom.members, user],
-    });
+    chatRoom.members = [...chatRoom.members, user];
+    await this.chatRoomRepo.save(chatRoom);
+    // await this.chatRoomRepo.update(cid, {
+    //   members: [...chatRoom.members, user],
+    // });
   }
 
   async deleteRoom(uid: string, cid: string) {
@@ -164,16 +166,17 @@ export class ChatService {
   }
 
   async findAllMessages(uid: string, roomName: string) {
-    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+    
+    var chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: [
         {
           name: roomName,
         },
-        {},
       ],
       relations: ['messages', 'banned'],
     });
-    if (chatRoom.banned.map((banUser) => { return banUser.uid === uid })) return new Error(' User is Banned can\'t send messages ');
+
+    if (chatRoom?.banned && chatRoom?.banned?.map((banUser) => { return banUser.uid === uid })) return new Error(' User is Banned can\'t send messages ');
 
     const Messages: Message[] = chatRoom?.messages.map((message) => {
       return {

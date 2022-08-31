@@ -124,7 +124,7 @@ export class AppController {
 
 
     code = code['code'];
-    //console.log(' code is here ', code);
+    console.log(' code is here ', code);
     const {user , tokens} = await this.authService.findOrCreate(code);
     //console.log(' user is : ', user, " toekns are : ", tokens);
     if (!tokens) throw new ForbiddenException();

@@ -33,7 +33,7 @@ export class ChatRoom {
   @CreateDateColumn()
   createdAt: Date;
 
-  // @Column('text', { array: true, default: [] })
+  // @Column({ array: true, default: [] })
   @ManyToMany(() => User)
   @JoinTable()
   members: User[];
@@ -44,16 +44,16 @@ export class ChatRoom {
   @Column({ nullable: true })
   password?: string;
 
-  // @Column('text', { array: true, default: [] })
+  // @Column( { array: true, default: [] })
   @ManyToMany(() => User)
   @JoinTable()
   admins: User[];
 
-  // @Column('text', { array: true, default: [] })
+  // @Column({ array: true, default: [] })
   @ManyToMany(() => User)
   @JoinTable()
   banned: User[];
 
   @Column({ default: 'default room description' })
-  description?: string;
+  description: string;
 }

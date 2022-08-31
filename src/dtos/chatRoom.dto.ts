@@ -20,6 +20,6 @@ export class createChatRoomDto {
   password?: string;
   admins: User[];
   banned: User[];
-  description?: string;
+  description: string;
   members: User[];
 }

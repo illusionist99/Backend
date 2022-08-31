@@ -172,7 +172,7 @@ export class AuthService {
     } catch (error) {
       //console.log(error);
       console.log(
-        'error ',
+        error,
         process.env.clientID,
         process.env.clientSecret,
         process.env.callbackURL,
