@@ -38,7 +38,7 @@ export class ChatRoom {
   @JoinTable()
   members: User[];
 
-  @Column({ unique: true, nullable: true })
+  @Column({ unique: true })
   name: string;
 
   @Column({ nullable: true })

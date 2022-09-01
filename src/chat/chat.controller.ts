@@ -8,6 +8,7 @@ import {
   Body,
   UnauthorizedException,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
@@ -18,6 +19,18 @@ import { ChatService } from './chat.service';
 @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
 export class ChatController {
   constructor(private chatService: ChatService) {}
+
+
+
+ // Search For Room By name 
+
+
+  @Get('find')
+  async searchByname(@Query('name') name: string) : Promise<ChatRoom[]> {
+
+    console.log(' seach for room with ', name);
+    return this.chatService.searchByname(name);
+  }
 
   // set as Admin in chatRoom
   @Post('admin')
@@ -76,13 +89,17 @@ export class ChatController {
   }
 
   @Post('createRoom')
-  async createRoom(@Body() createRoom: createChatRoomDto): Promise<void> {
+  async createRoom(@Request() req, @Body() createRoom: createChatRoomDto): Promise<void> {
+   
+    console.log(' user is ', req.user);
     await this.chatService.createRoom(createRoom);
     return;
   }
 
-  @Get('messages/:roomname')
+  @Get('/messages/:roomname')
   async getAllMessages(@Param('roomname') roomName: string, @Request() req) {
+
+    console.log(' looking for room name ', roomName)
     if (!roomName) throw new Error('specify room name');
     const userId: string = req.user.sub;
 
@@ -96,6 +113,8 @@ export class ChatController {
 
   @Get(':uid')
   async getRoomByUid(@Param('uid') uid: string) {
+
+    console.log(' looking for room id : ', uid)
     return this.chatService.findOne(uid);
   }
 }

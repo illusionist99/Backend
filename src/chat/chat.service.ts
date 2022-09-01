@@ -28,7 +28,20 @@ export class ChatService {
     private chatRoomRepo: Repository<ChatRoom>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
+    
   ) {}
+
+
+    async searchByname(name: string) : Promise<ChatRoom[]> {
+
+      name = name ? name.trim() : '%%';
+      const chatrooms: ChatRoom[] = await this.chatRoomRepo
+        .createQueryBuilder('chatroom')
+        .where('chatroom.name LIKE :s', { s: `%${name}%` })
+        .getMany();
+      return chatrooms.filter((c) => c.type === 'public');
+    }
 
   async joinRoomAsMember(userId: string, cid: string, password: string) {
     const user: User = await this.userRepo.findOne({ where: { uid: userId } });
@@ -52,6 +65,8 @@ export class ChatService {
     }
     chatRoom.members = [...chatRoom.members, user];
     await this.chatRoomRepo.save(chatRoom);
+
+
     // await this.chatRoomRepo.update(cid, {
     //   members: [...chatRoom.members, user],
     // });
@@ -155,6 +170,8 @@ export class ChatService {
 
     // createChatRoom.members.push(createChatRoom['owner']);
 
+    if (createChatRoom.name === null)
+      createChatRoom.name =  Math.random().toString(36);
     console.log('creation ', createChatRoom);
     // this.chatRoomRepo.create(createChatRoom);
 
@@ -165,6 +182,38 @@ export class ChatService {
     return await this.chatMessageRepo.find({ relations: ['ownerId'] });
     // return `This action returns all chat`;
   }
+
+
+
+  async getMessagingRooms(uid: string) {
+    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
+
+      relations: ['members', 'owner'],
+    });
+    console.log('chat rooms  0', chatRooms);
+    const result = [];
+    chatRooms.map((chatroom) => {
+      for (const id of chatroom.members) {
+        if (id.uid === uid) result.push(chatroom);
+      }
+    });
+    console.log('result : ', result);
+    return result.map((chatRoom) => {
+      console.log('chatroom is null : ', (chatRoom.name === null) ? "": chatRoom.name);
+     
+      return {
+
+        id: chatRoom.cid,
+        name: (chatRoom.name === null) ? "noname": chatRoom.name,
+        owner: chatRoom.owner,
+        admins: chatRoom.admins,
+        members: chatRoom.members,
+        description: chatRoom.description,
+        type: chatRoom.type,
+      };
+    });
+  }
+
 
   async findAllRooms(uid: string) {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
@@ -200,6 +249,9 @@ export class ChatService {
   }
 
   async findAllMessages(uid: string, roomName: string) {
+
+
+    console.log(' looking for messages in Room Name ', roomName);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: [
         {

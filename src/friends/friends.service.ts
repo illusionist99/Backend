@@ -62,8 +62,6 @@ export class FriendsService {
     sender: string,
     receiver: string,
   ): Promise<friendsRequest> {
-    const rcvUser: User = await this.userService.findById(receiver);
-    const sndUser: User = await this.userService.findById(sender);
 
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
 
@@ -88,7 +86,7 @@ export class FriendsService {
   }
 
   async getAllFriendRooms(uid: string): Promise<any[]> {
-    return this.chatService.findAllRooms(uid);
+    return this.chatService.getMessagingRooms(uid);
   }
 
   async allFriends(userId: string): Promise<any[]> {
@@ -126,8 +124,8 @@ export class FriendsService {
     if (!friendship) throw new ForbiddenException();
     this.friendsGateway.emitNotification(
       'accept',
-      (friendship.receiver as any).uid,
-      (friendship.sender as any).uid,
+      (friendship.receiver as unknown as User).uid,
+      (friendship.sender as unknown as User).uid,
     );
     this.notificationService.createNotification(
       (friendship.sender as any).uid,
@@ -136,19 +134,21 @@ export class FriendsService {
         sender: (friendship.receiver as any).uid,
       }),
     );
+    // const rcvUser: User = await this.userService.findById(receiver);
+    // const sndUser: User = await this.userService.findById(sender);
     const createdRoom: createChatRoomDto = new createChatRoomDto();
 
     createdRoom.name = null;
-    createdRoom.admins = [friendship.receiver as any, friendship.sender as any];
+    createdRoom.admins = [friendship.receiver as unknown as User, friendship.sender as unknown as User];
     createdRoom.members = [
-      friendship.receiver as any,
-      friendship.sender as any,
+      friendship.receiver as unknown as User,
+      friendship.sender as unknown as User,
     ];
-    createdRoom.owner = (friendship.receiver as any).uid;
+    createdRoom.owner = (friendship.receiver as unknown as User).uid;
 
     createdRoom.type = 'private';
 
-    console.log('created Room', createdRoom);
+    console.log('created Room after accepted frienship ', createdRoom);
     await this.chatService.createRoom(createdRoom);
     return await this.friendRequestRepo.update(uid, { status });
   }

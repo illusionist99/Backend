@@ -31,11 +31,11 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh' ) {
 
     async validate(payload : jwtPayload) {
 
-        //console.log('validation user using jwt start refresher ', payload);
+        console.log('validation user using jwt start refresher ', payload);
         const userId: string = payload.sub;
-
+        
         const user = await this.userService.findById(userId);
-        //console.log(user);
+        console.log(user);
         if (!user) throw new UnauthorizedException();
         return payload;
         // //console.log('checking if tfa is enabled');
