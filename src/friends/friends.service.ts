@@ -62,7 +62,6 @@ export class FriendsService {
     sender: string,
     receiver: string,
   ): Promise<friendsRequest> {
-
     // if (!rcvUser || !sndUser ) throw new ForbiddenException();
 
     const friendRequest: friendsRequest = new friendsRequest();
@@ -73,11 +72,19 @@ export class FriendsService {
     friendRequest.date = new Date();
     friendRequest.blocked = false;
 
+    const [rcv, snd] = await Promise.all([
+      this.userRepo.find({ where: { uid: receiver } }),
+      this.userRepo.find({ where: { uid: sender } }),
+    ]);
     // notification
-    this.friendsGateway.emitNotification('request', sender, receiver);
+    this.friendsGateway.emitNotification(
+      'request',
+      snd[0].username,
+      rcv[0].username,
+    );
     this.notificationService.createNotification(
       receiver,
-      JSON.stringify({ type: 'request', sender }),
+      JSON.stringify({ type: 'request', sender: snd[0].username }),
     );
 
     return await this.friendRequestRepo.save(
@@ -124,14 +131,14 @@ export class FriendsService {
     if (!friendship) throw new ForbiddenException();
     this.friendsGateway.emitNotification(
       'accept',
-      (friendship.receiver as unknown as User).uid,
-      (friendship.sender as unknown as User).uid,
+      (friendship.receiver as unknown as User).username,
+      (friendship.sender as unknown as User).username,
     );
     this.notificationService.createNotification(
       (friendship.sender as any).uid,
       JSON.stringify({
         type: 'accept',
-        sender: (friendship.receiver as any).uid,
+        sender: (friendship.receiver as any).username,
       }),
     );
     // const rcvUser: User = await this.userService.findById(receiver);
@@ -139,7 +146,10 @@ export class FriendsService {
     const createdRoom: createChatRoomDto = new createChatRoomDto();
 
     createdRoom.name = null;
-    createdRoom.admins = [friendship.receiver as unknown as User, friendship.sender as unknown as User];
+    createdRoom.admins = [
+      friendship.receiver as unknown as User,
+      friendship.sender as unknown as User,
+    ];
     createdRoom.members = [
       friendship.receiver as unknown as User,
       friendship.sender as unknown as User,

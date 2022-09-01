@@ -17,8 +17,8 @@ export class NotificationService {
     return await this.notifsRepo.save(notif);
   }
 
-  async setNotificationAsSeen(id: string) {
-    return await this.notifsRepo.update(id, { seen: true });
+  async setNotificationsAsSeen(userId: string) {
+    return await this.notifsRepo.update({userId}, { seen: true });
   }
 
   async deleteUserNotifications(userId: string) {

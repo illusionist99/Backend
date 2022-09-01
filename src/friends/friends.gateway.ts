@@ -33,6 +33,9 @@ export class FriendsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(private readonly authService: AuthService) {}
+  private userIdToSocketId: Map<string, string> = new Map<string, string>();
+  @WebSocketServer()
+  public server: Server;
 
   afterInit(server: Server) {
     this.server = server;
@@ -43,10 +46,8 @@ export class FriendsGateway
     //('user Logged Out ', client.data);
     // update status
     // //('Disconnected : ', client.data);
-    this.userIdToSocketId.delete(client.data.user.uid);
+    this.userIdToSocketId.delete(client.data.user.username);
   }
-
-  private userIdToSocketId: Map<string, string> = new Map<string, string>();
 
   async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
     const cookieName = 'jwt-rft';
@@ -68,31 +69,23 @@ export class FriendsGateway
     if (user) {
       client.data.user = user;
 
-      this.userIdToSocketId.set(user.uid, client.id);
+      // this.userIdToSocketId.set(user.uid, client.id);
+      this.userIdToSocketId.set(user.username, client.id);
 
       return true;
     }
     return client.conn.close();
   }
 
-  @WebSocketServer()
-  public server: Server;
-
-  // @SubscribeMessage('msgToServer')
-  // async create(@MessageBody() createChatDto: createChatMessageDto) : Promise<ChatMessage> {
-
-  //   this.server.emit('msgToClient', createChatDto);
-  //   return  this.chatService.create(createChatDto);
-  // }
   // @UseGuards(JwtWebSocketGuard)
-  @SubscribeMessage('notifications')
-  async test(@ConnectedSocket() client: Socket, room: string): Promise<void> {
-    if (!client.data.user) return;
+  // @SubscribeMessage('notifications')
+  // async test(@ConnectedSocket() client: Socket, room: string): Promise<void> {
+  //   if (!client.data.user) return;
 
-    console.log('received event from  : ', client.id, client.data.user as any);
-    // client.join(room);
-    // client.emit('joinedRoom', room);
-  }
+  //   console.log('received event from  : ', client.id, client.data.user as any);
+  //   // client.join(room);
+  //   // client.emit('joinedRoom', room);
+  // }
 
   async emitNotification(
     type: 'request' | 'accept',

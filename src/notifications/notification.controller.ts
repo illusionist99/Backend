@@ -35,10 +35,11 @@ export class NotificationController {
   }
 
   @Patch()
-  async setUserNotifsAsSeen(@Body() body: { notifIds: Array<string> }) {
-    if (!body.notifIds) return;
-    return await Promise.all(
-      body.notifIds?.map((e) => this.notifService.setNotificationAsSeen(e)),
-    );
+  async setUserNotifsAsSeen(@Req() req) {
+    // if (!body.notifIds) return;
+    // return await Promise.all(
+    //   body.notifIds?.map((e) => this.notifService.setNotificationAsSeen(e)),
+    // );
+    return this.notifService.setNotificationsAsSeen(req.user.sub)
   }
 }
