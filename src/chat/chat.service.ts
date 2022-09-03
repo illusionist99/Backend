@@ -28,20 +28,16 @@ export class ChatService {
     private chatRoomRepo: Repository<ChatRoom>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
-
-    
   ) {}
 
-
-    async searchByname(name: string) : Promise<ChatRoom[]> {
-
-      name = name ? name.trim() : '%%';
-      const chatrooms: ChatRoom[] = await this.chatRoomRepo
-        .createQueryBuilder('chatroom')
-        .where('chatroom.name LIKE :s', { s: `%${name}%` })
-        .getMany();
-      return chatrooms.filter((c) => c.type === 'public');
-    }
+  async searchByname(name: string): Promise<ChatRoom[]> {
+    name = name ? name.trim() : '%%';
+    const chatrooms: ChatRoom[] = await this.chatRoomRepo
+      .createQueryBuilder('chatroom')
+      .where('chatroom.name LIKE :s', { s: `%${name}%` })
+      .getMany();
+    return chatrooms.filter((c) => c.type === 'public');
+  }
 
   async joinRoomAsMember(userId: string, cid: string, password: string) {
     const user: User = await this.userRepo.findOne({ where: { uid: userId } });
@@ -65,7 +61,6 @@ export class ChatService {
     }
     chatRoom.members = [...chatRoom.members, user];
     await this.chatRoomRepo.save(chatRoom);
-
 
     // await this.chatRoomRepo.update(cid, {
     //   members: [...chatRoom.members, user],
@@ -92,6 +87,7 @@ export class ChatService {
       relations: ['admins'],
     });
 
+    console.log('---->1');
     if (!chatRoom) throw new UnauthorizedException();
     if (
       chatRoom.admins.find((admin) => {
@@ -99,18 +95,138 @@ export class ChatService {
       })
     )
       return new Error(' User is Already an Admin');
+    console.log('---->2');
     if (
       chatRoom.owner === uid ||
-      chatRoom.admins.map((admin) => {
+      chatRoom.admins.find((admin) => {
         return admin.uid === uid;
       })
     ) {
-      await this.chatRoomRepo.update(cid, {
+      console.log('---->3', chatRoom.admins);
+      // await this.chatRoomRepo.update(cid, {
+      //   admins: [
+      //     ...chatRoom.admins,
+      //     await this.userRepo.findOne({ where: { uid: newadmin } }),
+      //   ],
+      // });
+      await this.chatRoomRepo.save({
+        ...chatRoom,
         admins: [
           ...chatRoom.admins,
           await this.userRepo.findOne({ where: { uid: newadmin } }),
         ],
       });
+    } else {
+      return new UnauthorizedException();
+    }
+  }
+  async removeAdmin(
+    uid: string,
+    cid: string,
+    deletedAdmin: string,
+  ): Promise<any> {
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins'],
+    });
+
+    console.log('---->1');
+    if (!chatRoom) throw new UnauthorizedException();
+    if (
+      !chatRoom.admins.find((admin) => {
+        return admin.uid === deletedAdmin;
+      })
+    )
+      return new UnauthorizedException(); // not an admin
+    console.log('---->2');
+    if (
+      chatRoom.owner === uid ||
+      chatRoom.admins.find((admin) => {
+        return admin.uid === uid;
+      })
+    ) {
+      console.log('---->3', chatRoom.admins);
+      // await this.chatRoomRepo.update(cid, {
+      //   admins: [
+      //     ...chatRoom.admins,
+      //     await this.userRepo.findOne({ where: { uid: deletedAdmin } }),
+      //   ],
+      // });
+      await this.chatRoomRepo.save({
+        ...chatRoom,
+        admins: [...chatRoom.admins.filter((ad) => ad.uid != deletedAdmin)],
+      });
+    } else {
+      return new UnauthorizedException();
+    }
+  }
+  async removeMember(
+    uid: string,
+    cid: string,
+    deletedMember: string,
+  ): Promise<any> {
+    function isAuth(): boolean {
+      if (uid == deletedMember) return true;
+      if (chatRoom.owner == uid) {
+        return true;
+      }
+      if (chatRoom.admins.find((ad) => ad.uid == uid)) {
+        if (
+          deletedMember != chatRoom.owner &&
+          !chatRoom.admins.find((ad) => ad.uid == deletedMember)
+        )
+          return true;
+      }
+      return false;
+    }
+
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['members', 'admins'],
+    });
+
+    console.log('---->1');
+    if (!chatRoom) throw new UnauthorizedException();
+    if (
+      !chatRoom.members.find((m) => {
+        return m.uid === deletedMember;
+      })
+    )
+      return new UnauthorizedException(); // not an admin
+    console.log('---->2', chatRoom);
+    if (isAuth()) {
+      if (!(uid == deletedMember)) {
+      }
+      const newOwner = (() => {
+        if (deletedMember == chatRoom.owner) {
+          if (chatRoom.admins.length) {
+            return chatRoom.admins[0].uid;
+          } else if (chatRoom.members.length > 1) {
+            return chatRoom.members.filter((m) => m.uid != uid)[0].uid;
+          } else {
+            // delete room
+            return false;
+          }
+        }
+        return chatRoom.owner;
+      })();
+      if (newOwner == false) return this.deleteRoom(uid, cid);
+      else {
+        await this.chatRoomRepo.save({
+          ...chatRoom,
+          members: [
+            ...chatRoom.members.filter((mem) => mem.uid != deletedMember),
+          ],
+          admins: [...chatRoom.admins.filter((ad) => ad.uid != deletedMember)],
+          owner: newOwner,
+        });
+      }
+    } else {
+      return new UnauthorizedException();
     }
   }
 
@@ -171,7 +287,7 @@ export class ChatService {
     // createChatRoom.members.push(createChatRoom['owner']);
 
     if (createChatRoom.name === null)
-      createChatRoom.name =  Math.random().toString(36);
+      createChatRoom.name = Math.random().toString(36);
     console.log('creation ', createChatRoom);
     // this.chatRoomRepo.create(createChatRoom);
 
@@ -183,11 +299,8 @@ export class ChatService {
     // return `This action returns all chat`;
   }
 
-
-
   async getMessagingRooms(uid: string) {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-
       relations: ['members', 'owner'],
     });
     console.log('chat rooms  0', chatRooms);
@@ -199,12 +312,14 @@ export class ChatService {
     });
     console.log('result : ', result);
     return result.map((chatRoom) => {
-      console.log('chatroom is null : ', (chatRoom.name === null) ? "": chatRoom.name);
-     
-      return {
+      console.log(
+        'chatroom is null : ',
+        chatRoom.name === null ? '' : chatRoom.name,
+      );
 
-        id: chatRoom.cid,
-        name: (chatRoom.name === null) ? "noname": chatRoom.name,
+      return {
+        cid: chatRoom.cid,
+        name: chatRoom.name === null ? 'noname' : chatRoom.name,
         owner: chatRoom.owner,
         admins: chatRoom.admins,
         members: chatRoom.members,
@@ -213,7 +328,6 @@ export class ChatService {
       };
     });
   }
-
 
   async findAllRooms(uid: string) {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
@@ -237,7 +351,7 @@ export class ChatService {
     console.log('result : ', result);
     return chatRooms.map((chatRoom) => {
       return {
-        id: chatRoom.cid,
+        cid: chatRoom.cid,
         name: chatRoom.name,
         owner: chatRoom.owner,
         admins: chatRoom.admins,
@@ -249,8 +363,6 @@ export class ChatService {
   }
 
   async findAllMessages(uid: string, roomName: string) {
-
-
     console.log(' looking for messages in Room Name ', roomName);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: [
