@@ -29,6 +29,9 @@ export class FriendsService {
     private notificationService: NotificationService,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
+    @InjectRepository(ChatRoom)
+    private chatRepo: Repository<ChatRoom>,
   ) {
     // this.friendsGateway.server.emit('notification', { hello: 'world' });
   }
@@ -40,6 +43,37 @@ export class FriendsService {
 
     if (!friendRequest) throw new NotFoundException();
 
+    if (friendRequest.status) {
+      // delete room
+      const chatRooms: ChatRoom[] = await this.chatRepo.find({
+        where: [
+          {
+            type: 'private',
+            // owner: (friendRequest.sender as any),
+          },
+        ],
+        relations: ['members'],
+      });
+      console.log(chatRooms, friendRequest);
+      const room = chatRooms.filter((c) => {
+        return (
+          c.members.filter(
+            (m) =>{
+              // console.log("filtering members", m.uid,(friendRequest.sender), (friendRequest.receiver))
+              return (m.uid == (friendRequest.sender) ||
+              m.uid == (friendRequest.receiver))
+            }
+          ).length == 2
+        );
+      });
+
+      console.log('deleting',room);
+      if (room.length) {
+        this.chatRepo.delete(room[0].cid);
+      } else {
+        console.log('couldnt find room');
+      }
+    }
     return await this.friendRequestRepo.remove(friendRequest, {});
   }
 
@@ -118,6 +152,7 @@ export class FriendsService {
       relations: ['sender'],
     });
   }
+
   async UpdateFriendInvite(
     userId: string,
     uid: string,
@@ -158,7 +193,7 @@ export class FriendsService {
 
     createdRoom.type = 'private';
 
-    console.log('created Room after accepted frienship ', createdRoom);
+    // console.log('created Room after accepted frienship ', createdRoom);
     await this.chatService.createRoom(createdRoom);
     return await this.friendRequestRepo.update(uid, { status });
   }
@@ -190,7 +225,7 @@ export class FriendsService {
         blockedBy: userId,
       });
       await this.friendRequestRepo.save(friendship);
-      console.log('friendship created ');
+      // console.log('friendship created ');
     } else console.log('friendship already exists ');
     if (friendship.receiver !== userId && friendship.sender !== userId)
       throw new ForbiddenException();

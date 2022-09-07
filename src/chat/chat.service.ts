@@ -303,14 +303,14 @@ export class ChatService {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
       relations: ['members', 'owner'],
     });
-    console.log('chat rooms  0', chatRooms);
+    // console.log('chat rooms  0', chatRooms);
     const result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
         if (id.uid === uid) result.push(chatroom);
       }
     });
-    console.log('result : ', result);
+    // console.log('result : ', result);
     return result.map((chatRoom) => {
       console.log(
         'chatroom is null : ',
@@ -341,14 +341,14 @@ export class ChatService {
       ],
       relations: ['members', 'owner'],
     });
-    console.log('chat rooms  0', chatRooms);
+    // console.log('chat rooms  0', chatRooms);
     const result = [];
     // chatRooms.map((chatroom) => {
     //   for (const id of chatroom.members) {
     //     if (id.uid === uid) result.push(chatroom);
     //   }
     // });
-    console.log('result : ', result);
+    // console.log('result : ', result);
     return chatRooms.map((chatRoom) => {
       return {
         cid: chatRoom.cid,
