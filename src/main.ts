@@ -8,6 +8,7 @@ require('dotenv').config();
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
 
+  app.useStaticAssets(join(__dirname, '..', 'public'));
   app.use(cookieParser());
   app.enableCors({
     origin: [

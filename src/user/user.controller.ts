@@ -15,11 +15,15 @@ import {
   NotFoundException,
   Req,
   Inject,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/entities/user.entity';
+import { diskStorage } from 'multer';
 
 @Controller('user')
 @UseGuards(JwtAuthGuard, jwtRefreshAuthGuard)
@@ -81,10 +85,39 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  @Patch('')
-  async updateOne(@Req() req: any, @Body() data: any) {
-    if (!data.uid) throw new Error('BRUD');
-    return this.userService.update(data.uid, data);
+  @Patch('avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: 'public/avatars',
+      }),
+    }),
+  )
+  async updateAvatar(
+    @Req() req: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 2097152 }),
+          new FileTypeValidator({
+            fileType: /(gif|jpe?g|tiff?|png|webp|bmp)/,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.userService.update(req.user.sub, {
+      file,
+      nickname: null,
+    });
+  }
+  @Patch('nickname')
+  async updateNickname(@Req() req: any, @Body() data: { nickname: string }) {
+    return this.userService.update(req.user.sub, {
+      file: null,
+      nickname: data.nickname,
+    });
   }
 
   // @Post(':id/avatar') // update avatar

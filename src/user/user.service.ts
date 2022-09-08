@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ForbiddenException,
   Injectable,
@@ -16,6 +17,8 @@ import { randomInt } from 'crypto';
 import * as otplib from 'otplib';
 import { authenticator } from 'otplib';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UserService {
@@ -192,15 +195,37 @@ export class UserService {
     return null;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    console.log('updating user', updateUserDto);
-    const user = await this.userRepo.find({
+  async update(
+    id: string,
+    data: { file: Express.Multer.File; nickname: string },
+  ) {
+    const user = await this.userRepo.findOne({
       where: {
         uid: id,
       },
     });
     if (!user) throw new UnauthorizedException();
-    const updated = Object.assign(updateUserDto, user);
+    console.log('---------------->');
+    if (!data.file && !data.nickname) throw new BadRequestException();
+    const nickname = data.nickname || user.nickname;
+    let avatar = user.avatar;
+    if (data.file) {
+      const file = data.file;
+      // change name of images to username.{fileextension}
+      const url = process.env?.USERS_API;
+      let newImageName = `${file.destination}/${
+        user.username
+      }.${file.mimetype.substring(file.mimetype.indexOf('/') + 1)}`;
+      const newFile = path.join(__dirname, '../../', newImageName);
+      const oldFile = path.join(__dirname, '../../', file.path);
+      newImageName =
+        url + '/' + newImageName.substring(newImageName.indexOf('/') + 1);
+      fs.rename(oldFile, newFile, function (err) {
+        if (err) throw new Error();
+      });
+      avatar = newImageName;
+    }
+    const updated = { ...user, nickname, avatar };
     return await this.userRepo.save(updated);
   }
 
