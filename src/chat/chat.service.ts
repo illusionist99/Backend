@@ -30,6 +30,40 @@ export class ChatService {
     private userRepo: Repository<User>,
   ) {}
 
+  async findOrCreatePrivateRoom(users: string[]) {
+    const members: User[] = await this.userRepo.find({
+      where: [{ uid: users[0] }, { uid: users[1] }],
+    });
+    const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
+      where: [
+        {
+          type: 'private',
+        },
+      ],
+      relations: ['members', 'messages'],
+    });
+    const room = chatRooms.filter((c) => {
+      return (
+        c.members.filter((m) => {
+          // console.log("filtering members", m.uid,(friendRequest.sender), (friendRequest.receiver))
+          return m.uid == users[0] || m.uid == users[1];
+        }).length == 2
+      );
+    });
+    if (!room.length) {
+      return this.chatRoomRepo.save({
+        members: members,
+        admins: members,
+        banned: [],
+        name: '',
+        owner: users[0],
+        type: 'private',
+      });
+    } else {
+      return { ...room[0], messages: room[0].messages.length };
+    }
+  }
+
   async searchByname(name: string): Promise<ChatRoom[]> {
     name = name ? name.trim() : '%%';
     const chatrooms: ChatRoom[] = await this.chatRoomRepo

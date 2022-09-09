@@ -33,7 +33,13 @@ import { User } from 'src/entities/user.entity';
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly chatService: ChatService, @InjectRepository(User) private readonly repoUser: Repository<User>) {}
+  constructor(
+    private readonly chatService: ChatService,
+    @InjectRepository(User) private readonly repoUser: Repository<User>,
+  ) {}
+
+  @WebSocketServer()
+  private server: Server;
 
   afterInit(server: Server) {}
 
@@ -55,7 +61,9 @@ export class ChatGateway
   ): Promise<ChatRoom> {
     // //('user created Room', client.data.user);
     const room: ChatRoom = new createChatRoomDto();
-    const user: User = await this.repoUser.findOne({where: {uid: client.data.user.uid}});
+    const user: User = await this.repoUser.findOne({
+      where: { uid: client.data.user.uid },
+    });
     //(client.data.user.uid);
     // room.owner = client.data.user.uid;
     console.log('BBBbruh');
@@ -69,8 +77,19 @@ export class ChatGateway
     return this.chatService.createRoom(room);
   }
 
-  @WebSocketServer()
-  private server: Server;
+  @SubscribeMessage('createPrivateRoom')
+  async createPrivateRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { receiver: string },
+  ): Promise<any> {
+    // //('user created Room', client.data.user);
+    const room = await this.chatService.findOrCreatePrivateRoom([
+      client.data.user.uid,
+      data.receiver,
+    ]);
+    this.server.to(client.id).emit('privateRoomCreated', room);
+    return room;
+  }
 
   @SubscribeMessage('msgToServer')
   async create(
@@ -84,9 +103,9 @@ export class ChatGateway
     chatMessage.ownerId = client.data.user.uid;
 
     let roomO = await this.chatService.findRoomByName(message['room']);
-    // if (!roomO && message['room'] !== 'public') throw new WsException('Error');
-    // else if (!roomO && message['room'] === 'public')
-    if (!roomO) roomO = await this.createRoom(client, message['room']);
+    if (!roomO && message['room'] !== 'public') throw new WsException('Error');
+    else if (!roomO && message['room'] === 'public')
+      roomO = await this.createRoom(client, message['room']);
     console.log(
       'sending message to rooom ',
       message['room'],

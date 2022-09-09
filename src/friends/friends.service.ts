@@ -43,37 +43,36 @@ export class FriendsService {
 
     if (!friendRequest) throw new NotFoundException();
 
-    if (friendRequest.status) {
-      // delete room
-      const chatRooms: ChatRoom[] = await this.chatRepo.find({
-        where: [
-          {
-            type: 'private',
-            // owner: (friendRequest.sender as any),
-          },
-        ],
-        relations: ['members'],
-      });
-      console.log(chatRooms, friendRequest);
-      const room = chatRooms.filter((c) => {
-        return (
-          c.members.filter(
-            (m) =>{
-              // console.log("filtering members", m.uid,(friendRequest.sender), (friendRequest.receiver))
-              return (m.uid == (friendRequest.sender) ||
-              m.uid == (friendRequest.receiver))
-            }
-          ).length == 2
-        );
-      });
+    // if (friendRequest.status) {
+    //   // delete room
+    //   const chatRooms: ChatRoom[] = await this.chatRepo.find({
+    //     where: [
+    //       {
+    //         type: 'private',
+    //         // owner: (friendRequest.sender as any),
+    //       },
+    //     ],
+    //     relations: ['members'],
+    //   });
+    //   console.log(chatRooms, friendRequest);
+    //   const room = chatRooms.filter((c) => {
+    //     return (
+    //       c.members.filter((m) => {
+    //         // console.log("filtering members", m.uid,(friendRequest.sender), (friendRequest.receiver))
+    //         return (
+    //           m.uid == friendRequest.sender || m.uid == friendRequest.receiver
+    //         );
+    //       }).length == 2
+    //     );
+    //   });
 
-      console.log('deleting',room);
-      if (room.length) {
-        this.chatRepo.delete(room[0].cid);
-      } else {
-        console.log('couldnt find room');
-      }
-    }
+    //   console.log('deleting', room);
+    //   if (room.length) {
+    //     this.chatRepo.delete(room[0].cid);
+    //   } else {
+    //     console.log('couldnt find room');
+    //   }
+    // }
     return await this.friendRequestRepo.remove(friendRequest, {});
   }
 
@@ -178,23 +177,23 @@ export class FriendsService {
     );
     // const rcvUser: User = await this.userService.findById(receiver);
     // const sndUser: User = await this.userService.findById(sender);
-    const createdRoom: createChatRoomDto = new createChatRoomDto();
+    // const createdRoom: createChatRoomDto = new createChatRoomDto();
 
-    createdRoom.name = null;
-    createdRoom.admins = [
-      friendship.receiver as unknown as User,
-      friendship.sender as unknown as User,
-    ];
-    createdRoom.members = [
-      friendship.receiver as unknown as User,
-      friendship.sender as unknown as User,
-    ];
-    createdRoom.owner = (friendship.receiver as unknown as User).uid;
+    // createdRoom.name = null;
+    // createdRoom.admins = [
+    //   friendship.receiver as unknown as User,
+    //   friendship.sender as unknown as User,
+    // ];
+    // createdRoom.members = [
+    //   friendship.receiver as unknown as User,
+    //   friendship.sender as unknown as User,
+    // ];
+    // createdRoom.owner = (friendship.receiver as unknown as User).uid;
 
-    createdRoom.type = 'private';
+    // createdRoom.type = 'private';
 
-    // console.log('created Room after accepted frienship ', createdRoom);
-    await this.chatService.createRoom(createdRoom);
+    // // console.log('created Room after accepted frienship ', createdRoom);
+    // await this.chatService.createRoom(createdRoom);
     return await this.friendRequestRepo.update(uid, { status });
   }
 

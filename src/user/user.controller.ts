@@ -97,6 +97,10 @@ export class UserController {
     @Req() req: any,
     @UploadedFile(
       new ParseFilePipe({
+        // exceptionFactory(error) {
+        //   console.log('eroor----->', error);
+        //   throw error;
+        // },
         validators: [
           new MaxFileSizeValidator({ maxSize: 2097152 }),
           new FileTypeValidator({
