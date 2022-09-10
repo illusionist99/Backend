@@ -340,16 +340,23 @@ export class ChatService {
       relations: ['members', 'owner', 'messages'],
     });
     // console.log('chat rooms  0', chatRooms);
-    const result = [];
+    let result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
-        if (id.uid === uid && !chatroom.name.includes('GAME_'))
+        if (
+          id.uid === uid &&
+          !chatroom.name.includes('GAME_') &&
+          chatroom.name != 'public'
+        ) {
           // add check here to hide public room from convs list
           result.push(chatroom);
+          break;
+        }
       }
     });
-    // console.log('result : ', result);
-    return result.map((chatRoom) => {
+    console.log('result : ', result);
+
+    result = result.map((chatRoom) => {
       console.log(
         'chatroom is null : ',
         chatRoom.type === 'private' ? 'private' : chatRoom.name,
@@ -364,7 +371,15 @@ export class ChatService {
         description: chatRoom.description,
         type: chatRoom.type,
         messages: chatRoom.messages.length,
+        lastMessageTimestamp: chatRoom.messages.at(0)?.createdAt || 0,
       };
+    });
+
+    return result.sort((a, b) => {
+      return (
+        new Date(b.lastMessageTimestamp).getTime() -
+        new Date(a.lastMessageTimestamp).getTime()
+      );
     });
   }
 
