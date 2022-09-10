@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from 'src/dtos/user.dto';
-import axios from 'axios';
+import axios, { AxiosPromise } from 'axios';
 import { User } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { toDataURL } from 'qrcode';
@@ -182,8 +182,9 @@ export class AuthService {
 
     //console.log('authToken: ', authToken);
     const token = authToken.data['access_token'];
+    let userData;
     try {
-      var userData = await axios({
+      userData = await axios({
         url: 'https://api.intra.42.fr/v2/me',
         method: 'GET',
         headers: {
@@ -217,7 +218,8 @@ export class AuthService {
     newUser.nickname = userData.data.displayname;
     // newUser.avatar = userData.data.image_url;
     newUser.username = userData.data.login;
-    newUser.avatar = 'https://api.multiavatar.com/' + newUser.nickname + '.svg';
+    newUser.avatar =
+      'https://api.multiavatar.com/' + userData.data.login + '.svg';
     // const chatRoom = new ChatRoom;
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';

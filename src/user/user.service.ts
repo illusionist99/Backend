@@ -212,7 +212,8 @@ export class UserService {
     if (data.file) {
       const file = data.file;
       // change name of images to username.{fileextension}
-      const url = process.env?.USERS_API;
+      const url = process.env.USERS_API;
+      console.log(process.env);
       let newImageName = `${file.destination}/${
         user.username
       }.${file.mimetype.substring(file.mimetype.indexOf('/') + 1)}`;

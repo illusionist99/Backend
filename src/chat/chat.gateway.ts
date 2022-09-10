@@ -113,7 +113,7 @@ export class ChatGateway
       message['message'],
       roomO,
     );
-    chatMessage.roomId = roomO;
+    chatMessage.roomId = roomO.cid;
     chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
     this.server.to(message['room']).except(client.id).emit('msgToClient', {

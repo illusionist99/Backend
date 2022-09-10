@@ -16,7 +16,7 @@ type Message = {
   text: string;
   date: Date;
   username: string;
-  userId: string;
+  ownerId: string;
 };
 
 @Injectable()
@@ -51,7 +51,7 @@ export class ChatService {
       );
     });
     if (!room.length) {
-      return this.chatRoomRepo.save({
+      const r = await this.chatRoomRepo.save({
         members: members,
         admins: members,
         banned: [],
@@ -59,6 +59,7 @@ export class ChatService {
         owner: users[0],
         type: 'private',
       });
+      return this.chatRoomRepo.save({ ...r, name: r.cid });
     } else {
       return { ...room[0], messages: room[0].messages.length };
     }
@@ -305,9 +306,10 @@ export class ChatService {
   }
 
   async create(createChatDto: createChatMessageDto): Promise<ChatMessage> {
-    this.chatMessageRepo.create(createChatDto);
-    //console.log(createChatDto);
-    return await this.chatMessageRepo.save(createChatDto);
+    console.log('->>', createChatDto);
+    return await this.chatMessageRepo.save(
+      this.chatMessageRepo.create(createChatDto),
+    );
   }
 
   async createRoom(
@@ -335,7 +337,7 @@ export class ChatService {
 
   async getMessagingRooms(uid: string) {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      relations: ['members', 'owner'],
+      relations: ['members', 'owner', 'messages'],
     });
     // console.log('chat rooms  0', chatRooms);
     const result = [];
@@ -348,17 +350,18 @@ export class ChatService {
     return result.map((chatRoom) => {
       console.log(
         'chatroom is null : ',
-        chatRoom.name === null ? '' : chatRoom.name,
+        chatRoom.type === 'private' ? 'private' : chatRoom.name,
       );
 
       return {
         cid: chatRoom.cid,
-        name: chatRoom.name === null ? 'noname' : chatRoom.name,
+        name: chatRoom.type === 'private' ? 'noname' : chatRoom.name,
         owner: chatRoom.owner,
         admins: chatRoom.admins,
         members: chatRoom.members,
         description: chatRoom.description,
         type: chatRoom.type,
+        messages: chatRoom.messages.length,
       };
     });
   }
@@ -406,10 +409,11 @@ export class ChatService {
       ],
       relations: ['messages', 'banned'],
     });
+    console.log(' looking for messages in Room Name ', chatRoom);
 
     if (
       chatRoom?.banned &&
-      chatRoom?.banned?.map((banUser) => {
+      chatRoom?.banned?.find((banUser) => {
         return banUser.uid === uid;
       })
     )
@@ -420,9 +424,10 @@ export class ChatService {
         text: message.text,
         date: message.createdAt,
         username: message.username,
-        userId: message.ownerId,
+        ownerId: message.ownerId,
       };
     });
+    console.log('messages', chatRoom.messages);
 
     return Messages;
   }
