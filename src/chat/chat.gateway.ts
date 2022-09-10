@@ -108,6 +108,13 @@ export class ChatGateway
       message['room'] !== 'public' &&
       !message['room'].includes('GAME_')
     )
+      roomO = await this.chatService.findRoomById(message['room']);
+
+    if (
+      !roomO &&
+      message['room'] !== 'public' &&
+      !message['room'].includes('GAME_')
+    )
       throw new WsException('Error');
     else if (
       !roomO &&

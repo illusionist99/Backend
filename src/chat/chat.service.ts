@@ -438,13 +438,16 @@ export class ChatService {
     return await this.chatRoomRepo.findOne({ where: { name: name } });
   }
 
+  async findRoomById(cid: string): Promise<any> {
+    return await this.chatRoomRepo.findOne({ where: { cid } });
+  }
+
   async findOne(id: string): Promise<ChatRoom> {
     const chat = await this.chatRoomRepo.findOne({
       where: { cid: id },
       relations: ['messages', 'admins', 'banned', 'owner', 'members'],
     });
-
-    return chat;
+    return { ...chat, name: chat.type === 'private' ? 'noname' : chat.name };
   }
 
   // update(id: number, updateChatDto: UpdateChatDto) {
