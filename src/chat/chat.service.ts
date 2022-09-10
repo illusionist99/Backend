@@ -137,7 +137,7 @@ export class ChatService {
         return admin.uid === uid;
       })
     ) {
-      console.log('---->3', chatRoom.admins);
+      // console.log('---->3', chatRoom.admins);
       // await this.chatRoomRepo.update(cid, {
       //   admins: [
       //     ...chatRoom.admins,
@@ -182,7 +182,7 @@ export class ChatService {
         return admin.uid === uid;
       })
     ) {
-      console.log('---->3', chatRoom.admins);
+      // console.log('---->3', chatRoom.admins);
       // await this.chatRoomRepo.update(cid, {
       //   admins: [
       //     ...chatRoom.admins,
@@ -232,7 +232,7 @@ export class ChatService {
       })
     )
       return new UnauthorizedException(); // not an admin
-    console.log('---->2', chatRoom);
+    // console.log('---->2', chatRoom);
     if (isAuth()) {
       if (!(uid == deletedMember)) {
       }
@@ -402,7 +402,7 @@ export class ChatService {
   }
 
   async findAllMessages(uid: string, roomName: string) {
-    console.log(' looking for messages in Room Name ', roomName);
+    // console.log(' looking for messages in Room Name ', roomName);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: [
         {
@@ -411,7 +411,7 @@ export class ChatService {
       ],
       relations: ['messages', 'banned'],
     });
-    console.log(' looking for messages in Room Name ', chatRoom);
+    // console.log(' looking for messages in Room Name ', chatRoom);
 
     if (
       chatRoom?.banned &&
@@ -429,7 +429,7 @@ export class ChatService {
         ownerId: message.ownerId,
       };
     });
-    console.log('messages', chatRoom.messages);
+    // console.log('messages', chatRoom.messages);
 
     return Messages;
   }

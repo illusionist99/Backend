@@ -121,6 +121,7 @@ export class ChatGateway
       (message['room'] === 'public' || message['room'].includes('GAME_'))
     )
       roomO = await this.createRoom(client, message['room']);
+
     if (!message['message'].length) return;
 
     console.log(
@@ -134,7 +135,7 @@ export class ChatGateway
     chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
     this.server.to(message['room']).except(client.id).emit('msgToClient', {
-      userId: client.data.user.uid,
+      ownerId: client.data.user.uid,
       username: client.data.user.username,
       text: message['message'],
       room: message['room'],
@@ -161,6 +162,8 @@ export class ChatGateway
 
   @SubscribeMessage('leaveRoomToServer')
   leaveRoom(client: Socket, room: string) {
+
+  
     client.leave(room);
     // //(req.user, "  we know user  ");
     // const roomFound = this.chatService.findRoomByName(room);
