@@ -343,7 +343,9 @@ export class ChatService {
     const result = [];
     chatRooms.map((chatroom) => {
       for (const id of chatroom.members) {
-        if (id.uid === uid) result.push(chatroom);
+        if (id.uid === uid && !chatroom.name.includes('GAME_'))
+          // add check here to hide public room from convs list
+          result.push(chatroom);
       }
     });
     // console.log('result : ', result);

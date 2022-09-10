@@ -103,8 +103,16 @@ export class ChatGateway
     chatMessage.ownerId = client.data.user.uid;
 
     let roomO = await this.chatService.findRoomByName(message['room']);
-    if (!roomO && message['room'] !== 'public') throw new WsException('Error');
-    else if (!roomO && message['room'] === 'public')
+    if (
+      !roomO &&
+      message['room'] !== 'public' &&
+      !message['room'].includes('GAME_')
+    )
+      throw new WsException('Error');
+    else if (
+      !roomO &&
+      (message['room'] === 'public' || message['room'].includes('GAME_'))
+    )
       roomO = await this.createRoom(client, message['room']);
     console.log(
       'sending message to rooom ',
