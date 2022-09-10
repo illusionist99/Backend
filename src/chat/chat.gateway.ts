@@ -121,6 +121,8 @@ export class ChatGateway
       (message['room'] === 'public' || message['room'].includes('GAME_'))
     )
       roomO = await this.createRoom(client, message['room']);
+    if (!message['message'].length) return;
+
     console.log(
       'sending message to rooom ',
       message['room'],
@@ -148,8 +150,11 @@ export class ChatGateway
   // }
 
   @SubscribeMessage('joinRoomToServer')
-  joinRoom(client: Socket, room: string) {
+  async joinRoom(client: Socket, room: string) {
     console.log('recieved room : ', room);
+
+    if (room === 'public') await this.create(client, { room, message: '' });
+
     client.join(room);
     // client.emit('joinedRoom', room);
   }
