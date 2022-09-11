@@ -450,11 +450,17 @@ export class ChatService {
   }
 
   async findRoomByName(name: string): Promise<any> {
-    return await this.chatRoomRepo.findOne({ where: { name: name } });
+    return await this.chatRoomRepo.findOne({
+      where: { name: name },
+      relations: ['members'],
+    });
   }
 
   async findRoomById(cid: string): Promise<any> {
-    return await this.chatRoomRepo.findOne({ where: { cid } });
+    return await this.chatRoomRepo.findOne({
+      where: { cid },
+      relations: ['members'],
+    });
   }
 
   async findOne(id: string): Promise<ChatRoom> {

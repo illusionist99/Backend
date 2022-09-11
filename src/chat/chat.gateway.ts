@@ -40,6 +40,17 @@ export class ChatGateway
 
   @WebSocketServer()
   private server: Server;
+  private userIdToSocketId: Map<string, string> = new Map<string, string>();
+
+  async emitNewMessage(receiver: string, room: string) {
+    if (this.userIdToSocketId.has(receiver))
+      this.server
+        .to(this.userIdToSocketId.get(receiver))
+        .emit('newMessage', { room });
+    else {
+      console.log(receiver, 'is disconnected');
+    }
+  }
 
   afterInit(server: Server) {}
 
@@ -47,11 +58,15 @@ export class ChatGateway
     //('user Logged Out ', client.data);
     // update status
     // //('Disconnected : ', client.data);
+    this.userIdToSocketId.delete(client.data?.user?.uid);
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
-    //('Logged in user ', client.data);
-    // //('Connected ', client.id);
+    // this.userIdToSocketId.set(user.username, client.id);
+  }
+  @SubscribeMessage('listeningForNewMessage')
+  async listeningForNewMessage(@ConnectedSocket() client: Socket) {
+    this.userIdToSocketId.set(client.data.user.uid, client.id);
   }
 
   @SubscribeMessage('createRoom')
@@ -134,12 +149,26 @@ export class ChatGateway
     chatMessage.roomId = roomO.cid;
     chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
+
     this.server.to(message['room']).except(client.id).emit('msgToClient', {
       ownerId: client.data.user.uid,
       username: client.data.user.username,
       text: message['message'],
       room: message['room'],
     });
+
+    // Notify
+    if (message['room'] !== 'public' && !message['room'].includes('GAME_')) {
+      const membersToNotify = roomO.members.filter((m: User) => {
+        return (
+          m.uid != client.data.user.uid && this.userIdToSocketId.has(m.uid)
+        );
+      });
+      this.server
+        .to(membersToNotify.map((m: User) => this.userIdToSocketId.get(m.uid)))
+        .emit('newMessage', { room: message['room'] });
+    }
+
     return this.chatService.create(chatMessage);
   }
 
@@ -162,8 +191,6 @@ export class ChatGateway
 
   @SubscribeMessage('leaveRoomToServer')
   leaveRoom(client: Socket, room: string) {
-
-  
     client.leave(room);
     // //(req.user, "  we know user  ");
     // const roomFound = this.chatService.findRoomByName(room);

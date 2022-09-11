@@ -33,7 +33,7 @@ export class FriendsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(private readonly authService: AuthService) {}
-  private userIdToSocketId: Map<string, string> = new Map<string, string>();
+  private usernameToSocketId: Map<string, string> = new Map<string, string>();
   @WebSocketServer()
   public server: Server;
 
@@ -46,13 +46,14 @@ export class FriendsGateway
     //('user Logged Out ', client.data);
     // update status
     // //('Disconnected : ', client.data);
-    this.userIdToSocketId.delete(client.data.user.username);
+    this.usernameToSocketId.delete(client.data.user.username);
   }
 
   async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
     const cookieName = 'jwt-rft';
+    let cookies;
     try {
-      var cookies = client.handshake.headers.cookie
+      cookies = client.handshake.headers.cookie
         .split(';')
         .map((c) => c.trim())
         .filter((cookie) => {
@@ -69,8 +70,8 @@ export class FriendsGateway
     if (user) {
       client.data.user = user;
 
-      // this.userIdToSocketId.set(user.uid, client.id);
-      this.userIdToSocketId.set(user.username, client.id);
+      // this.usernameToSocketId.set(user.uid, client.id);
+      this.usernameToSocketId.set(user.username, client.id);
 
       return true;
     }
@@ -92,10 +93,20 @@ export class FriendsGateway
     sender: string,
     receiver: string,
   ) {
-    if (this.userIdToSocketId.has(receiver))
+    if (this.usernameToSocketId.has(receiver))
       this.server
-        .to(this.userIdToSocketId.get(receiver))
+        .to(this.usernameToSocketId.get(receiver))
         .emit('notification', { type, sender });
+    else {
+      console.log(receiver, 'is disconnected');
+    }
+  }
+
+  async emitJoinedRoom(receiver: string, room : string) {
+    if (this.usernameToSocketId.has(receiver))
+      this.server
+        .to(this.usernameToSocketId.get(receiver))
+        .emit('joinedRoom', { room });
     else {
       console.log(receiver, 'is disconnected');
     }
