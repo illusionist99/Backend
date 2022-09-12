@@ -205,26 +205,19 @@ export class UserService {
       },
     });
     if (!user) throw new UnauthorizedException();
-    console.log('---------------->');
     if (!data.file && !data.nickname) throw new BadRequestException();
     const nickname = data.nickname || user.nickname;
     let avatar = user.avatar;
     if (data.file) {
       const file = data.file;
-      // change name of images to username.{fileextension}
       const url = process.env.USERS_API;
-      console.log(process.env);
-      let newImageName = `${file.destination}/${
-        user.username
-      }.${file.mimetype.substring(file.mimetype.indexOf('/') + 1)}`;
-      const newFile = path.join(__dirname, '../../', newImageName);
-      const oldFile = path.join(__dirname, '../../', file.path);
-      newImageName =
-        url + '/' + newImageName.substring(newImageName.indexOf('/') + 1);
-      fs.rename(oldFile, newFile, function (err) {
+      const newImageName = `./public/avatars/${user.username}.${
+        file.mimetype.split('/')[1]
+      }`;
+      fs.rename(file.path, newImageName, function (err) {
         if (err) throw new Error();
       });
-      avatar = newImageName;
+      avatar = url + `/` + newImageName.substring(8);
     }
     const updated = { ...user, nickname, avatar };
     return await this.userRepo.save(updated);
@@ -291,7 +284,7 @@ export class UserService {
     while (currentXp >= TotalXpNeeded) {
       user.level++;
 
-      xpNeededForLevel = user.level * lvlFactor;
+      // xpNeededForLevel = user.level * lvlFactor;
       TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
       currentXp = user.xp;
       //console.log('level Up ');

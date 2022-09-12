@@ -124,6 +124,13 @@ export class UserController {
     });
   }
 
+  @Patch('status')
+  async updateStatus(
+    @Req() req: any,
+    @Body() data: { status: 'online' | 'offline' | 'playing' | 'spectating' },
+  ) {
+    return this.userService.setStatus(req.user.sub, data.status);
+  }
   // @Post(':id/avatar') // update avatar
   // @UseInterceptors(FileInterceptor('file'))
   // async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
