@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
   Delete,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
@@ -44,6 +45,23 @@ export class ChatController {
 
     return this.chatService.setAdmin(userId, chatRoom, newAdmin);
   }
+  // add memeber
+  @Post('addmemeber')
+  async addmemebers(
+    @Body() data: { cid: string; members: string[] },
+    @Request() req,
+  ): Promise<void> {
+    const userId = req.user.sub as string;
+    const chatRoom = data.cid;
+    const newMembers = data.members;
+
+    console.log('add memeber ---->', data);
+
+    if (!userId) throw new UnauthorizedException();
+    else if (!chatRoom || !newMembers) throw new BadRequestException();
+
+    return this.chatService.setMembers(userId, chatRoom, newMembers);
+  }
 
   @Post('deleteadmin')
   async removeAdmin(
@@ -66,6 +84,8 @@ export class ChatController {
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const deleteMember: string = data.uid;
+
+    console.log('-----> ids', userId, chatRoom, deleteMember);
 
     if (!userId || !chatRoom || !deleteMember)
       throw new UnauthorizedException();
@@ -101,6 +121,15 @@ export class ChatController {
     if (!userId || !chatRoom) throw new UnauthorizedException();
 
     return this.chatService.joinRoomAsMember(userId, chatRoom, hash);
+  }
+  @Post('leave')
+  async leaveRoom(@Request() req, @Body() data: { cid: string }) {
+    const uid: string = req.user.sub;
+    const cid: string = data.cid;
+
+    if (!uid || !cid) throw new UnauthorizedException();
+
+    return this.chatService.leaveRoom(uid, cid);
   }
 
   // remove room

@@ -2,15 +2,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Code, Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 import * as bcrypt from 'bcrypt';
+import { NotFoundError } from 'rxjs';
 
 type Message = {
   text: string;
@@ -103,12 +105,14 @@ export class ChatService {
   }
 
   async deleteRoom(uid: string, cid: string) {
+    console.log('cid', cid, uid);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: {
         cid,
       },
+      relations: ['messages'],
     });
-
+    console.log(' chat room ', chatRoom);
     if (!chatRoom || chatRoom.owner !== uid) throw new ForbiddenException();
 
     await this.chatRoomRepo.delete(cid);
@@ -197,72 +201,76 @@ export class ChatService {
       return new UnauthorizedException();
     }
   }
+
+  async setMembers(uid: string, cid: string, members: string[]): Promise<any> {
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins', 'members'],
+    });
+    if (!chatRoom) throw new UnauthorizedException();
+
+    const admin = chatRoom.admins.find((admin) => {
+      return admin.uid === uid;
+    });
+    if (admin || chatRoom.owner == uid) {
+      const newMembers = await Promise.all(
+        members.map(async (m) => {
+          return await this.userRepo.findOne({ where: { uid: m } });
+        }),
+      );
+      return await this.chatRoomRepo.save({
+        ...chatRoom,
+        members: [...chatRoom.members, ...newMembers],
+      });
+    }
+    return new ForbiddenException();
+  }
+
   async removeMember(
     uid: string,
     cid: string,
     deletedMember: string,
   ): Promise<any> {
-    function isAuth(): boolean {
-      if (uid == deletedMember) return true;
-      if (chatRoom.owner == uid) {
-        return true;
-      }
-      if (chatRoom.admins.find((ad) => ad.uid == uid)) {
-        if (
-          deletedMember != chatRoom.owner &&
-          !chatRoom.admins.find((ad) => ad.uid == deletedMember)
-        )
-          return true;
-      }
-      return false;
-    }
+    return;
+  }
 
+  async leaveRoom(uid: string, cid: string) {
+    console.log('-----> leave roooom');
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: {
         cid,
       },
       relations: ['members', 'admins'],
     });
+    if (!chatRoom) throw new NotFoundException('chat room not found');
 
-    console.log('---->1');
-    if (!chatRoom) throw new UnauthorizedException();
-    if (
-      !chatRoom.members.find((m) => {
-        return m.uid === deletedMember;
-      })
-    )
-      return new UnauthorizedException(); // not an admin
-    // console.log('---->2', chatRoom);
-    if (isAuth()) {
-      if (!(uid == deletedMember)) {
-      }
-      const newOwner = (() => {
-        if (deletedMember == chatRoom.owner) {
-          if (chatRoom.admins.length) {
-            return chatRoom.admins[0].uid;
-          } else if (chatRoom.members.length > 1) {
-            return chatRoom.members.filter((m) => m.uid != uid)[0].uid;
-          } else {
-            // delete room
-            return false;
-          }
-        }
-        return chatRoom.owner;
-      })();
-      if (newOwner == false) return this.deleteRoom(uid, cid);
-      else {
-        await this.chatRoomRepo.save({
-          ...chatRoom,
-          members: [
-            ...chatRoom.members.filter((mem) => mem.uid != deletedMember),
-          ],
-          admins: [...chatRoom.admins.filter((ad) => ad.uid != deletedMember)],
-          owner: newOwner,
-        });
-      }
-    } else {
-      return new UnauthorizedException();
+    if (chatRoom.owner != uid) {
+      return await this.chatRoomRepo.save({
+        ...chatRoom,
+        members: chatRoom.members.filter((mem) => mem.uid != uid),
+        admins: chatRoom.admins.filter((ad) => ad.uid != uid),
+      });
     }
+    console.log('leaving member is owner------>');
+    const updatedRoom = {
+      ...chatRoom,
+      members: [...chatRoom.members.filter((mem) => mem.uid != uid)],
+      admins: [...chatRoom.admins.filter((ad) => ad.uid != uid)],
+    };
+    console.log('updated rooom', updatedRoom);
+
+    let newOwner = updatedRoom.admins[0];
+    if (!newOwner) newOwner = updatedRoom.members[0];
+    if (!newOwner) {
+      return await this.deleteRoom(uid, cid);
+    }
+
+    console.log('new owner', newOwner);
+    return await this.chatRoomRepo.update(cid, {
+      owner: newOwner.uid,
+    });
   }
 
   async ban(uid: string, cid: string, banned: string): Promise<any> {
@@ -464,11 +472,15 @@ export class ChatService {
   }
 
   async findOne(id: string): Promise<ChatRoom> {
-    const chat = await this.chatRoomRepo.findOne({
-      where: { cid: id },
-      relations: ['messages', 'admins', 'banned', 'owner', 'members'],
-    });
-    return { ...chat, name: chat.type === 'private' ? 'noname' : chat.name };
+    try {
+      const chat = await this.chatRoomRepo.findOneOrFail({
+        where: { cid: id },
+        relations: ['messages', 'admins', 'banned', 'owner', 'members'],
+      });
+      return { ...chat, name: chat.type === 'private' ? 'noname' : chat.name };
+    } catch {
+      throw new NotFoundException('room not found');
+    }
   }
 
   // update(id: number, updateChatDto: UpdateChatDto) {

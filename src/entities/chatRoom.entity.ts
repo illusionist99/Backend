@@ -22,7 +22,7 @@ export class ChatRoom {
   type: roomType;
 
   @Column()
-  @ManyToOne(() => User, (user) => user.uid, {})
+  @ManyToOne(() => User, (user) => user.uid, { onUpdate: 'CASCADE' })
   owner: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.roomId, {

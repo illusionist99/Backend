@@ -16,9 +16,10 @@ export class ChatMessage {
   @Column()
   text: string;
 
-
   @Column()
-  @ManyToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid)
+  @ManyToOne((type) => ChatRoom, (chatRoom) => chatRoom.cid, {
+    onDelete: 'SET NULL',
+  })
   roomId: string;
 
   @Column()
