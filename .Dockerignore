@@ -3,7 +3,6 @@ dist
 static
 node_modules
 .*
-package*
 tsconfig*
 t.t
 README.md
