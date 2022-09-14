@@ -16,12 +16,13 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 
+@Injectable()
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost', 'http://localhost:8000'],

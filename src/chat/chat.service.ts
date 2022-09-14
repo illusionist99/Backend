@@ -1,6 +1,8 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -14,6 +16,7 @@ import { createChatMessageDto } from '../dtos/chatMessage.dto';
 import * as bcrypt from 'bcrypt';
 import { NotFoundError } from 'rxjs';
 import { UserService } from 'src/user/user.service';
+import { ChatGateway } from './chat.gateway';
 
 type Message = {
   text: string;
