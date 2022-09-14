@@ -8,12 +8,14 @@ import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatController } from './chat.controller';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   providers: [ChatGateway, ChatService],
   imports: [
     TypeOrmModule.forFeature([User, ChatRoom, ChatMessage]),
     AuthModule,
+    UserModule,
   ],
   controllers: [ChatController],
   exports: [ChatService],

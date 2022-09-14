@@ -13,6 +13,7 @@ import { Code, Repository } from 'typeorm';
 import { createChatMessageDto } from '../dtos/chatMessage.dto';
 import * as bcrypt from 'bcrypt';
 import { NotFoundError } from 'rxjs';
+import { UserService } from 'src/user/user.service';
 
 type Message = {
   text: string;
@@ -30,6 +31,8 @@ export class ChatService {
     private chatRoomRepo: Repository<ChatRoom>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
+    private userService: UserService,
   ) {}
 
   async findOrCreatePrivateRoom(users: string[]) {
@@ -209,6 +212,13 @@ export class ChatService {
       },
       relations: ['admins', 'members'],
     });
+
+    function notMember(member: User): boolean {
+      const found = chatRoom.members.find((m) => member.uid == m.uid);
+      console.log('!!!!', !!found, found, member);
+      return !found;
+    }
+
     if (!chatRoom) throw new UnauthorizedException();
 
     const admin = chatRoom.admins.find((admin) => {
@@ -222,7 +232,7 @@ export class ChatService {
       );
       return await this.chatRoomRepo.save({
         ...chatRoom,
-        members: [...chatRoom.members, ...newMembers],
+        members: [...chatRoom.members, ...newMembers.filter(notMember)],
       });
     }
     return new ForbiddenException();
@@ -233,7 +243,33 @@ export class ChatService {
     cid: string,
     deletedMember: string,
   ): Promise<any> {
-    return;
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins', 'members'],
+    });
+
+    if (!chatRoom) throw new UnauthorizedException();
+
+    const admin = chatRoom.admins.find((admin) => {
+      return admin.uid === uid;
+    });
+    const deletedUserAdmin = chatRoom.admins.find((admin) => {
+      return admin.uid === deletedMember;
+    });
+    // if owner || ( user is admin and todelete is not owner and not admin )
+    if (
+      chatRoom.owner == uid ||
+      (admin && !deletedUserAdmin && !(chatRoom.owner == deletedMember))
+    ) {
+      return await this.chatRoomRepo.save({
+        ...chatRoom,
+        members: [...chatRoom.members.filter((m) => m.uid != deletedMember)],
+        admins: [...chatRoom.admins.filter((m) => m.uid != deletedMember)],
+      });
+    }
+    return new ForbiddenException();
   }
 
   async leaveRoom(uid: string, cid: string) {
@@ -245,6 +281,7 @@ export class ChatService {
       relations: ['members', 'admins'],
     });
     if (!chatRoom) throw new NotFoundException('chat room not found');
+    console.log('-----> leave roooom 2');
 
     if (chatRoom.owner != uid) {
       return await this.chatRoomRepo.save({
@@ -267,8 +304,9 @@ export class ChatService {
       return await this.deleteRoom(uid, cid);
     }
 
-    console.log('new owner', newOwner);
-    return await this.chatRoomRepo.update(cid, {
+    console.log('new owner', newOwner, updatedRoom);
+    return await this.chatRoomRepo.save({
+      ...updatedRoom,
       owner: newOwner.uid,
     });
   }
@@ -345,17 +383,14 @@ export class ChatService {
 
   async getMessagingRooms(uid: string) {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
-      relations: ['members', 'owner', 'messages'],
+      relations: ['members', 'messages'],
     });
     // console.log('chat rooms  0', chatRooms);
     let result = [];
     chatRooms.map((chatroom) => {
+      if (chatroom.name.includes('GAME_') || chatroom.name == 'public') return;
       for (const id of chatroom.members) {
-        if (
-          id.uid === uid &&
-          !chatroom.name.includes('GAME_') &&
-          chatroom.name != 'public'
-        ) {
+        if (id.uid === uid) {
           // add check here to hide public room from convs list
           result.push(chatroom);
           break;
@@ -364,24 +399,26 @@ export class ChatService {
     });
     console.log('result : ', result);
 
-    result = result.map((chatRoom) => {
-      console.log(
-        'chatroom is null : ',
-        chatRoom.type === 'private' ? 'private' : chatRoom.name,
-      );
+    result = await Promise.all(
+      result.map(async (chatRoom) => {
+        console.log(
+          'chatroom is null : ',
+          chatRoom.type === 'private' ? 'private' : chatRoom.name,
+        );
 
-      return {
-        cid: chatRoom.cid,
-        name: chatRoom.type === 'private' ? 'noname' : chatRoom.name,
-        owner: chatRoom.owner,
-        admins: chatRoom.admins,
-        members: chatRoom.members,
-        description: chatRoom.description,
-        type: chatRoom.type,
-        messages: chatRoom.messages.length,
-        lastMessageTimestamp: chatRoom.messages.at(0)?.createdAt || 0,
-      };
-    });
+        return {
+          cid: chatRoom.cid,
+          name: chatRoom.type === 'private' ? 'noname' : chatRoom.name,
+          owner: await this.userService.findOne(chatRoom.owner), // get User for database
+          admins: chatRoom.admins,
+          members: chatRoom.members,
+          description: chatRoom.description,
+          type: chatRoom.type,
+          messages: chatRoom.messages.length,
+          lastMessageTimestamp: chatRoom.messages.at(0)?.createdAt || 0,
+        };
+      }),
+    );
 
     return result.sort((a, b) => {
       return (
@@ -401,27 +438,30 @@ export class ChatService {
           type: 'protected',
         },
       ],
-      relations: ['members', 'owner'],
+      relations: ['members'],
     });
     // console.log('chat rooms  0', chatRooms);
     const result = [];
-    // chatRooms.map((chatroom) => {
-    //   for (const id of chatroom.members) {
-    //     if (id.uid === uid) result.push(chatroom);
-    //   }
-    // });
-    // console.log('result : ', result);
-    return chatRooms.map((chatRoom) => {
-      return {
-        cid: chatRoom.cid,
-        name: chatRoom.name,
-        owner: chatRoom.owner,
-        admins: chatRoom.admins,
-        members: chatRoom.members,
-        description: chatRoom.description,
-        type: chatRoom.type,
-      };
+    chatRooms.map((chatroom) => {
+      if (chatroom.name == 'public') return;
+      for (const id of chatroom.members) {
+        if (id.uid === uid) result.push(chatroom);
+      }
     });
+    // console.log('result : ', result);
+    return await Promise.all(
+      result.map(async (chatRoom) => {
+        return {
+          cid: chatRoom.cid,
+          name: chatRoom.name,
+          owner: await this.userService.findOne(chatRoom.owner), // get user from database
+          admins: chatRoom.admins,
+          members: chatRoom.members,
+          description: chatRoom.description,
+          type: chatRoom.type,
+        };
+      }),
+    );
   }
 
   async findAllMessages(uid: string, roomName: string) {
@@ -471,13 +511,18 @@ export class ChatService {
     });
   }
 
-  async findOne(id: string): Promise<ChatRoom> {
+  async findOne(id: string) {
     try {
       const chat = await this.chatRoomRepo.findOneOrFail({
         where: { cid: id },
-        relations: ['messages', 'admins', 'banned', 'owner', 'members'],
+        relations: ['messages', 'admins', 'banned', 'members'],
       });
-      return { ...chat, name: chat.type === 'private' ? 'noname' : chat.name };
+      return {
+        ...chat,
+        name: chat.type === 'private' ? 'noname' : chat.name,
+        owner: await this.userService.findOne(chat.owner),
+      };
+      // get user from database ?
     } catch {
       throw new NotFoundException('room not found');
     }
