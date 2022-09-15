@@ -143,6 +143,19 @@ export class ChatController {
     return this.chatService.deleteRoom(userId, chatRoom);
   }
 
+  @Post('updateRoomPass')
+  async updatePassword(
+    @Request() req,
+    @Body() data: { cid: string; old_pass: string; new_pass: string },
+  ) {
+    const userId = req.user.sub;
+    return this.chatService.updateRoomPass(userId, {
+      cid: data.cid,
+      old_pass: data.old_pass,
+      new_pass: data.new_pass,
+    });
+  }
+
   @Post('createRoom')
   async createRoom(
     @Request() req,

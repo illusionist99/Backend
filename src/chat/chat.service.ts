@@ -100,7 +100,7 @@ export class ChatService {
       throw new ForbiddenException();
     if (chatRoom.type === 'protected') {
       const isMatch: boolean = bcrypt.compare(password, chatRoom.password);
-      if (!isMatch) return Error('Wrong Password !!');
+      if (!isMatch) throw new ForbiddenException('Wrong Password !!');
     }
     chatRoom.members = [...chatRoom.members, user];
     await this.chatRoomRepo.save(chatRoom);
@@ -122,6 +122,46 @@ export class ChatService {
     if (!chatRoom || chatRoom.owner !== uid) throw new ForbiddenException();
 
     await this.chatRoomRepo.delete(cid);
+  }
+
+  async updateRoomPass(
+    uid: string,
+    data: { cid: string; old_pass: string; new_pass: string },
+  ) {
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid: data.cid,
+      },
+      relations: ['admins'],
+    });
+
+    if (!chatRoom) throw new UnauthorizedException();
+    const roomPass = await bcrypt.hash(data.new_pass, 10);
+    if (chatRoom)
+      if (
+        chatRoom.owner == uid ||
+        chatRoom.admins.find((ad) => ad.uid == uid)
+      ) {
+        if (chatRoom.type == 'public') {
+          // create new password
+          return await this.chatRoomRepo.save({
+            ...chatRoom,
+            password: roomPass,
+            type: 'protected',
+          });
+        } else if (chatRoom.type == 'privategroup') {
+          return await this.chatRoomRepo.save({
+            ...chatRoom,
+            password: roomPass,
+            type: 'protected',
+          });
+        } else {
+          // if old pass if valid update
+          if (bcrypt.compare(data.old_pass, chatRoom.password)) {
+          } else throw new ForbiddenException('wrong password');
+        }
+      }
+    throw new ForbiddenException('you are not admin');
   }
 
   async setAdmin(uid: string, cid: string, newadmin: string): Promise<any> {
