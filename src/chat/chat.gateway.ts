@@ -16,7 +16,7 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
-import { Injectable, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, UseGuards } from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -35,7 +35,9 @@ export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
+    @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+
     @InjectRepository(User) private readonly repoUser: Repository<User>,
   ) {}
 
@@ -53,6 +55,35 @@ export class ChatGateway
     }
   }
 
+  emitConvsRefreshRequest(
+    users: string[],
+    room: string,
+    type: 'add' | 'remove',
+    removedUser?: string,
+  ) {
+    const online = users.filter((u) => this.userIdToSocketId.has(u));
+    const sockets = online.map((u) => this.userIdToSocketId.get(u));
+
+    this.server
+      .to(sockets)
+      .emit('convsRefreshRequest', { type, room, removedUser });
+  }
+
+  //new message event is similar to this, look at what's common later
+  emitChatRefreshRequest(
+    users: string[],
+    room: string,
+    type: 'add' | 'remove',
+    removedUser?: string,
+  ) {
+    const online = users.filter((u) => this.userIdToSocketId.has(u));
+    const sockets = online.map((u) => this.userIdToSocketId.get(u));
+
+    this.server
+      .to(sockets)
+      .emit('chatRefreshRequest', { type, room, removedUser });
+  }
+
   afterInit(server: Server) {}
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -65,8 +96,8 @@ export class ChatGateway
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
     // this.userIdToSocketId.set(user.username, client.id);
   }
-  @SubscribeMessage('listeningForNewMessage')
-  async listeningForNewMessage(@ConnectedSocket() client: Socket) {
+  @SubscribeMessage('listeningForEvents') // newMessage , chat refresh , convs refresh
+  async listeningForEvents(@ConnectedSocket() client: Socket) {
     this.userIdToSocketId.set(client.data.user.uid, client.id);
   }
 

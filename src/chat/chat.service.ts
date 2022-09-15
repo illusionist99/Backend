@@ -1,5 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  BadRequestException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -36,6 +37,9 @@ export class ChatService {
     private userRepo: Repository<User>,
 
     private userService: UserService,
+
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async findOrCreatePrivateRoom(users: string[]) {
@@ -104,7 +108,16 @@ export class ChatService {
     }
     chatRoom.members = [...chatRoom.members, user];
     await this.chatRoomRepo.save(chatRoom);
-
+    this.chatGateway.emitConvsRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'add',
+    );
+    this.chatGateway.emitChatRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'add',
+    );
     // await this.chatRoomRepo.update(cid, {
     //   members: [...chatRoom.members, user],
     // });
@@ -268,15 +281,27 @@ export class ChatService {
       return admin.uid === uid;
     });
     if (admin || chatRoom.owner == uid) {
-      const newMembers = await Promise.all(
+      let newMembers = await Promise.all(
         members.map(async (m) => {
           return await this.userRepo.findOne({ where: { uid: m } });
         }),
       );
-      return await this.chatRoomRepo.save({
+      newMembers = newMembers.filter(notMember);
+      newMembers = [...chatRoom.members, ...newMembers];
+      await this.chatRoomRepo.save({
         ...chatRoom,
-        members: [...chatRoom.members, ...newMembers.filter(notMember)],
+        members: newMembers,
       });
+      this.chatGateway.emitConvsRefreshRequest(
+        newMembers.map((u: User) => u.uid),
+        chatRoom.cid,
+        'add',
+      );
+      this.chatGateway.emitChatRefreshRequest(
+        newMembers.map((u: User) => u.uid),
+        chatRoom.cid,
+        'add',
+      );
     }
     return new ForbiddenException();
   }
@@ -306,11 +331,23 @@ export class ChatService {
       chatRoom.owner == uid ||
       (admin && !deletedUserAdmin && !(chatRoom.owner == deletedMember))
     ) {
-      return await this.chatRoomRepo.save({
+      const r = await this.chatRoomRepo.save({
         ...chatRoom,
         members: [...chatRoom.members.filter((m) => m.uid != deletedMember)],
         admins: [...chatRoom.admins.filter((m) => m.uid != deletedMember)],
       });
+      this.chatGateway.emitConvsRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'remove',
+        deletedMember,
+      );
+      this.chatGateway.emitChatRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'remove',
+        deletedMember,
+      );
     }
     return new ForbiddenException();
   }
@@ -327,6 +364,18 @@ export class ChatService {
     console.log('-----> leave roooom 2');
 
     if (chatRoom.owner != uid) {
+      this.chatGateway.emitConvsRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'remove',
+        uid,
+      );
+      this.chatGateway.emitChatRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'remove',
+        uid,
+      );
       return await this.chatRoomRepo.save({
         ...chatRoom,
         members: chatRoom.members.filter((mem) => mem.uid != uid),
@@ -348,10 +397,22 @@ export class ChatService {
     }
 
     console.log('new owner', newOwner, updatedRoom);
-    return await this.chatRoomRepo.save({
+    await this.chatRoomRepo.save({
       ...updatedRoom,
       owner: newOwner.uid,
     });
+    this.chatGateway.emitConvsRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'remove',
+      uid,
+    );
+    this.chatGateway.emitChatRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'remove',
+      uid,
+    );
   }
 
   async ban(uid: string, cid: string, banned: string): Promise<any> {
@@ -414,9 +475,23 @@ export class ChatService {
     if (createChatRoom.name === null)
       createChatRoom.name = Math.random().toString(36);
     console.log('creation ', createChatRoom);
-    // this.chatRoomRepo.create(createChatRoom);
-
-    return await this.chatRoomRepo.save(createChatRoom);
+    try {
+      const r = await this.chatRoomRepo.save(createChatRoom);
+      // this.chatRoomRepo.create(createChatRoom);
+      this.chatGateway.emitConvsRefreshRequest(
+        r.members.map((u: User) => u.uid),
+        r.cid,
+        'add',
+      );
+      this.chatGateway.emitChatRefreshRequest(
+        r.members.map((u: User) => u.uid),
+        r.cid,
+        'add',
+      );
+      return r;
+    } catch (e) {
+      throw new BadRequestException();
+    }
   }
 
   async findAll(): Promise<ChatMessage[]> {
