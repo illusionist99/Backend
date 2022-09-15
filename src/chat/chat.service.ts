@@ -129,11 +129,22 @@ export class ChatService {
       where: {
         cid,
       },
-      relations: ['messages'],
+      relations: ['members'],
     });
     console.log(' chat room ', chatRoom);
     if (!chatRoom || chatRoom.owner !== uid) throw new ForbiddenException();
-
+    this.chatGateway.emitConvsRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'remove', // just refreshing here
+      '',
+    );
+    this.chatGateway.emitChatRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      chatRoom.cid,
+      'remove', // just refreshing
+      '*',
+    );
     await this.chatRoomRepo.delete(cid);
   }
 
@@ -182,7 +193,7 @@ export class ChatService {
       where: {
         cid,
       },
-      relations: ['admins'],
+      relations: ['admins', 'members'],
     });
 
     console.log('---->1');
@@ -214,6 +225,16 @@ export class ChatService {
           await this.userRepo.findOne({ where: { uid: newadmin } }),
         ],
       });
+      // this.chatGateway.emitConvsRefreshRequest(
+      //   chatRoom.members.map((u: User) => u.uid),
+      //   chatRoom.cid,
+      //   'add', // just refreshing here
+      // );
+      this.chatGateway.emitChatRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'add', // just refreshing
+      );
     } else {
       return new UnauthorizedException();
     }
@@ -227,7 +248,7 @@ export class ChatService {
       where: {
         cid,
       },
-      relations: ['admins'],
+      relations: ['admins', 'members'],
     });
 
     console.log('---->1');
@@ -256,6 +277,16 @@ export class ChatService {
         ...chatRoom,
         admins: [...chatRoom.admins.filter((ad) => ad.uid != deletedAdmin)],
       });
+      // this.chatGateway.emitConvsRefreshRequest(
+      //   chatRoom.members.map((u: User) => u.uid),
+      //   chatRoom.cid,
+      //   'add', // just refreshing here
+      // );
+      this.chatGateway.emitChatRefreshRequest(
+        chatRoom.members.map((u: User) => u.uid),
+        chatRoom.cid,
+        'add', // just refreshing
+      );
     } else {
       return new UnauthorizedException();
     }
