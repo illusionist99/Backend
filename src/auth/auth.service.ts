@@ -209,7 +209,7 @@ export class AuthService {
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
-      return { user, tokens };
+      return { user, tokens, isNew: false };
     }
 
     const newUser = new CreateUserDto();
@@ -233,7 +233,7 @@ export class AuthService {
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
     //console.log('created New User and assigned RefreshToken');
-    return { newUser, tokens };
+    return { newUser, tokens, isNew: true, username: user.username };
   }
 
   async getTokens(
