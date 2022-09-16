@@ -157,7 +157,7 @@ export class ChatController {
     });
   }
 
-  @Delete('roompass')
+  @Post('deleteroompass')
   async deletePassword(
     @Request() req,
     @Body() data: { cid: string; oldPass: string },

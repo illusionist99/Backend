@@ -18,6 +18,7 @@ import * as bcrypt from 'bcrypt';
 import { NotFoundError } from 'rxjs';
 import { UserService } from 'src/user/user.service';
 import { ChatGateway } from './chat.gateway';
+import e from 'express';
 
 type Message = {
   text: string;
@@ -165,25 +166,33 @@ export class ChatService {
       const roomPass = await bcrypt.hash(data.newPass, 10);
       if (chatRoom.type == 'public') {
         // create new password
-        return await this.chatRoomRepo.save({
+        await this.chatRoomRepo.save({
           ...chatRoom,
           password: roomPass,
           type: 'protected',
         });
+        this.chatGateway.emitChatRefreshRequest(
+          [...chatRoom.admins.map((u: User) => u.uid), chatRoom.owner],
+          chatRoom.cid,
+          'add', // just refreshing
+        );
       } else if (chatRoom.type == 'privategroup') {
         throw new ForbiddenException("can't update private room");
       } else {
         // if old pass if valid update
         if (await bcrypt.compare(data.oldPass, chatRoom.password)) {
-          return await this.chatRoomRepo.save({
+          await this.chatRoomRepo.save({
             ...chatRoom,
             password: roomPass,
-            type: 'public',
           });
+          this.chatGateway.emitChatRefreshRequest(
+            [...chatRoom.admins.map((u: User) => u.uid), chatRoom.owner],
+            chatRoom.cid,
+            'add', // just refreshing
+          );
         } else throw new ForbiddenException('wrong password');
       }
-    }
-    throw new ForbiddenException('you are not admin');
+    } else throw new ForbiddenException('you are not admin');
   }
 
   async deleteRoomPass(uid: string, cid: string, oldPass: string) {
@@ -201,11 +210,15 @@ export class ChatService {
       console.log('passes to compare', oldPass, chatRoom.password);
       const isMatch = await bcrypt.compare(oldPass, chatRoom.password);
       if (!isMatch) throw new ForbiddenException('Wrong Password !!');
-      return await this.chatRoomRepo.save({
-        ...chatRoom,
+      await this.chatRoomRepo.save({
         password: null,
         type: 'public',
       });
+      this.chatGateway.emitChatRefreshRequest(
+        [...chatRoom.admins.map((u: User) => u.uid), chatRoom.owner],
+        chatRoom.cid,
+        'add', // just refreshing
+      );
     }
     throw new ForbiddenException('you are not admin');
   }
@@ -615,6 +628,7 @@ export class ChatService {
     const result = [];
     chatRooms.map((chatroom) => {
       if (chatroom.name == 'public') return;
+      if (chatroom.name.includes('GAME_')) return;
       // for (const id of chatroom.members) {
       //   if (id.uid === uid) result.push(chatroom);
       // }
