@@ -46,7 +46,8 @@ export class FriendsGateway
     //('user Logged Out ', client.data);
     // update status
     // //('Disconnected : ', client.data);
-    this.usernameToSocketId.delete(client.data.user.username);
+    if (client.data?.user?.username)
+      this.usernameToSocketId.delete(client.data.user.username);
   }
 
   async handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
@@ -102,7 +103,7 @@ export class FriendsGateway
     }
   }
 
-  async emitJoinedRoom(receiver: string, room : string) {
+  async emitJoinedRoom(receiver: string, room: string) {
     if (this.usernameToSocketId.has(receiver))
       this.server
         .to(this.usernameToSocketId.get(receiver))

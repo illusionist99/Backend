@@ -10,6 +10,7 @@ import {
   Delete,
   Query,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
@@ -96,14 +97,14 @@ export class ChatController {
   // ban user from chat room
   @Post('ban')
   async setbanned(
-    @Body() data: { roomId: string; banned: string },
+    @Body() data: { cid: string; uid: string },
     @Request() req,
   ): Promise<void> {
     const userId: string = req.user.sub;
-    const chatRoom: string = data.roomId;
-    const banned: string = data.banned;
+    const chatRoom: string = data.cid;
+    const banned: string = data.uid;
 
-    if (!userId || !chatRoom || !banned) throw new UnauthorizedException();
+    if (!userId || !chatRoom || !banned) throw new BadRequestException();
 
     return this.chatService.ban(userId, chatRoom, banned);
   }
@@ -190,9 +191,9 @@ export class ChatController {
     return this.chatService.findAllRooms(req.user.sub);
   }
 
-  @Get(':uid')
-  async getRoomByUid(@Param('uid') uid: string) {
-    console.log(' looking for room id : ', uid);
-    return this.chatService.findOne(uid);
+  @Get(':cid')
+  async getRoomBycid(@Req() req, @Param('cid') cid: string) {
+    console.log(' looking for room id : ', cid);
+    return this.chatService.findOne(req.user.sub, cid);
   }
 }

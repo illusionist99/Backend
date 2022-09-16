@@ -96,13 +96,17 @@ export class ChatService {
       where: {
         cid,
       },
-      relations: ['members'],
+      relations: ['members', 'banned'],
     });
     if (
       !chatRoom ||
       (!(chatRoom.type === 'protected') && !(chatRoom.type === 'public'))
     )
       throw new ForbiddenException();
+
+    if (chatRoom.banned.find((u) => u.uid == userId))
+      throw new ForbiddenException();
+
     if (chatRoom.type === 'protected') {
       console.log('passord --> ', password, chatRoom.password);
       const isMatch = await await bcrypt.compare(password, chatRoom.password);
@@ -481,7 +485,7 @@ export class ChatService {
     );
   }
 
-  async ban(uid: string, cid: string, banned: string): Promise<any> {
+  async ban(userId: string, cid: string, banned: string): Promise<any> {
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: {
         cid,
@@ -489,36 +493,39 @@ export class ChatService {
       relations: ['admins', 'banned', 'members'],
     });
 
-    if (!chatRoom) throw new UnauthorizedException();
+    if (!chatRoom) throw new BadRequestException();
+
     if (
-      chatRoom.admins.find((admin) => {
-        return admin.uid === banned;
-      }) &&
-      uid != chatRoom.owner
+      //if not admin and not owner
+      !chatRoom.admins.find((u) => u.uid == userId) &&
+      chatRoom.owner != userId
     )
-      return new Error(" Can't Ban An Admin Only By Owner");
-    if (
-      chatRoom.owner === uid ||
-      (chatRoom.admins.map((admin) => {
-        return admin.uid === uid;
-      }) &&
-        chatRoom.members.map((member) => {
-          member.uid === banned;
-        }))
-    ) {
-      await this.chatRoomRepo.update(cid, {
-        members: chatRoom.members.filter((member) => {
-          return member.uid === banned;
-        }),
-        banned: [
-          ...chatRoom.banned,
-          await this.userRepo.findOne({ where: { uid: banned } }),
-        ],
-        admins: chatRoom.admins.filter((admin) => {
-          return admin.uid === banned;
-        }),
-      });
-    }
+      throw new UnauthorizedException('not admin');
+
+    if (chatRoom.banned.find((u) => u.uid == banned))
+      // already banned
+      throw new BadRequestException('already banned');
+
+    const r = await this.chatRoomRepo.save({
+      ...chatRoom,
+      members: chatRoom.members.filter((u) => u.uid != banned),
+      banned: [
+        ...chatRoom.banned,
+        await this.userRepo.findOneOrFail({ where: { uid: banned } }),
+      ],
+    });
+    this.chatGateway.emitConvsRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      r.cid,
+      'remove', // just refreshing here
+      banned,
+    );
+    this.chatGateway.emitChatRefreshRequest(
+      chatRoom.members.map((u: User) => u.uid),
+      r.cid,
+      'remove', // just refreshing
+      banned,
+    );
   }
 
   async create(createChatDto: createChatMessageDto): Promise<ChatMessage> {
@@ -622,17 +629,13 @@ export class ChatService {
           type: 'protected',
         },
       ],
-      relations: ['members'],
+      relations: ['members', 'banned'],
     });
-    // console.log('chat rooms  0', chatRooms);
     const result = [];
     chatRooms.map((chatroom) => {
       if (chatroom.name == 'public') return;
       if (chatroom.name.includes('GAME_')) return;
-      // for (const id of chatroom.members) {
-      //   if (id.uid === uid) result.push(chatroom);
-      // }
-      // ? i don't why this filter this function is used by chat/rooms route
+      if (chatroom.banned.find((u) => u.uid == uid)) return;
       result.push(chatroom);
     });
     console.log('result : ', result);
@@ -669,7 +672,7 @@ export class ChatService {
         return banUser.uid === uid;
       })
     )
-      return new Error(" User is Banned can't send messages ");
+      throw new UnauthorizedException(" User is Banned can't send messages ");
 
     const Messages: Message[] = chatRoom?.messages.map((message) => {
       return {
@@ -698,12 +701,14 @@ export class ChatService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(uid: string, cid: string) {
     try {
       const chat = await this.chatRoomRepo.findOneOrFail({
-        where: { cid: id },
+        where: { cid: cid },
         relations: ['messages', 'admins', 'banned', 'members'],
       });
+      if (chat.banned.find((u) => u.uid == uid))
+        throw new UnauthorizedException();
       return {
         ...chat,
         name: chat.type === 'private' ? 'noname' : chat.name,

@@ -259,8 +259,8 @@ export class ChatGateway
   }
 
   @SubscribeMessage('findOneChat')
-  async findOne(@MessageBody() id: string) {
-    return this.chatService.findOne(id);
+  async findOne(@ConnectedSocket() client: Socket, @MessageBody() id: string) {
+    return this.chatService.findOne(client.data.user.uid, id);
   }
 
   // @SubscribeMessage('updateChat')
