@@ -349,6 +349,11 @@ export class ChatService {
       console.log('!!!!', !!found, found, member);
       return !found;
     }
+    function notBanned(member: User): boolean {
+      const banned = chatRoom?.banned.find((m) => member.uid == m.uid);
+      console.log('!!!!', !!banned, banned, member);
+      return !banned;
+    }
 
     if (!chatRoom) throw new UnauthorizedException();
 
@@ -363,6 +368,7 @@ export class ChatService {
       );
       const newMembersOnly = newMembers;
       newMembers = newMembers.filter(notMember);
+      newMembers = newMembers.filter(notBanned);
       newMembers = [...chatRoom.members, ...newMembers];
       await this.chatRoomRepo.save({
         ...chatRoom,
