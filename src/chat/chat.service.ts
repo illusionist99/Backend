@@ -103,7 +103,9 @@ export class ChatService {
     )
       throw new ForbiddenException();
     if (chatRoom.type === 'protected') {
-      const isMatch: boolean = bcrypt.compare(password, chatRoom.password);
+      console.log('passord --> ', password, chatRoom.password);
+      const isMatch = await await bcrypt.compare(password, chatRoom.password);
+      console.log('does password match ? ', isMatch);
       if (!isMatch) throw new ForbiddenException('Wrong Password !!');
     }
     chatRoom.members = [...chatRoom.members, user];
@@ -172,13 +174,7 @@ export class ChatService {
         throw new ForbiddenException("can't update private room");
       } else {
         // if old pass if valid update
-        if (bcrypt.compare(data.oldPass, chatRoom.password)) {
-          console.log('passes to compare', data.oldPass, chatRoom.password);
-          const isMatch: boolean = bcrypt.compare(
-            data.oldPass,
-            chatRoom.password,
-          );
-          if (!isMatch) throw new ForbiddenException('Wrong Password !!');
+        if (await bcrypt.compare(data.oldPass, chatRoom.password)) {
           return await this.chatRoomRepo.save({
             ...chatRoom,
             password: roomPass,
@@ -203,7 +199,7 @@ export class ChatService {
         throw new ForbiddenException('not a protected room');
       }
       console.log('passes to compare', oldPass, chatRoom.password);
-      const isMatch: boolean = bcrypt.compare(oldPass, chatRoom.password);
+      const isMatch = await bcrypt.compare(oldPass, chatRoom.password);
       if (!isMatch) throw new ForbiddenException('Wrong Password !!');
       return await this.chatRoomRepo.save({
         ...chatRoom,
@@ -619,11 +615,13 @@ export class ChatService {
     const result = [];
     chatRooms.map((chatroom) => {
       if (chatroom.name == 'public') return;
-      for (const id of chatroom.members) {
-        if (id.uid === uid) result.push(chatroom);
-      }
+      // for (const id of chatroom.members) {
+      //   if (id.uid === uid) result.push(chatroom);
+      // }
+      // ? i don't why this filter this function is used by chat/rooms route
+      result.push(chatroom);
     });
-    // console.log('result : ', result);
+    console.log('result : ', result);
     return await Promise.all(
       result.map(async (chatRoom) => {
         return {
