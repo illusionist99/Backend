@@ -232,8 +232,8 @@ export class AuthService {
     );
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
-    //console.log('created New User and assigned RefreshToken');
-    return { newUser, tokens, isNew: true, username: user.username };
+    console.log('created New User and assigned RefreshToken', newUser);
+    return { newUser, tokens, isNew: true };
   }
 
   async getTokens(

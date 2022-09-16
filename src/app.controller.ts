@@ -126,11 +126,13 @@ export class AppController {
   ): Promise<any> {
     code = code['code'];
     console.log(' code is here ', code);
-    const { user, tokens, isNew } = await this.authService.findOrCreate(code);
-    //console.log(' user is : ', user, " toekns are : ", tokens);
+    const { newUser, tokens, isNew } = await this.authService.findOrCreate(
+      code,
+    );
+    console.log(' user is : ', newUser, ' toekns are : ', tokens);
     if (!tokens) throw new ForbiddenException();
     if (tokens['tfaEnabled'] === true) {
-      const jwtTfa = await this.authService.tfaJwt(user, tokens);
+      const jwtTfa = await this.authService.tfaJwt(newUser, tokens);
 
       res.cookie('tfa-rft', jwtTfa['tfaAccess'], { httpOnly: true });
 
@@ -139,7 +141,11 @@ export class AppController {
     }
 
     res.cookie('jwt-rft', tokens['refreshToken'], { httpOnly: true });
-    return { access_token: tokens['access_token'], isNew };
+    return {
+      access_token: tokens['access_token'],
+      isNew,
+      username: newUser.username,
+    };
   }
 
   @Post('auth/login')
