@@ -19,6 +19,7 @@ import { NotFoundError } from 'rxjs';
 import { UserService } from 'src/user/user.service';
 import { ChatGateway } from './chat.gateway';
 import e from 'express';
+import { NotificationService } from 'src/notifications/notification.service';
 
 type Message = {
   text: string;
@@ -41,6 +42,8 @@ export class ChatService {
 
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+
+    private notifService: NotificationService,
   ) {}
 
   async findOrCreatePrivateRoom(users: string[]) {
@@ -356,6 +359,7 @@ export class ChatService {
           return await this.userRepo.findOne({ where: { uid: m } });
         }),
       );
+      const newMembersOnly = newMembers;
       newMembers = newMembers.filter(notMember);
       newMembers = [...chatRoom.members, ...newMembers];
       await this.chatRoomRepo.save({
@@ -372,6 +376,26 @@ export class ChatService {
         chatRoom.cid,
         'add',
       );
+      // notification
+
+      newMembersOnly.map((u: User) => {
+        if (u.uid == chatRoom.owner) return;
+        const senderUsername = chatRoom.members.find(
+          (u) => uid == u.uid,
+        ).username;
+        this.chatGateway.emitNotification('joinedRoom', senderUsername, u.uid, {
+          cid: chatRoom.cid,
+          name: chatRoom.name,
+        });
+        this.notifService.createNotification(
+          u.uid,
+          JSON.stringify({
+            type: 'joinedRoom',
+            sender: senderUsername,
+            room: { cid: chatRoom.cid, name: chatRoom.name },
+          }),
+        );
+      });
     }
     return new ForbiddenException();
   }
@@ -561,6 +585,25 @@ export class ChatService {
         r.cid,
         'add',
       );
+      // notification
+
+      r.members.map((u: User) => {
+        if (u.uid == r.owner) return;
+        const senderUsername = r.members.find((u) => r.owner == u.uid).username;
+        this.chatGateway.emitNotification('joinedRoom', senderUsername, u.uid, {
+          cid: r.cid,
+          name: r.name,
+        });
+        this.notifService.createNotification(
+          u.uid,
+          JSON.stringify({
+            type: 'joinedRoom',
+            sender: senderUsername,
+            room: { cid: r.cid, name: r.name },
+          }),
+        );
+      });
+
       return r;
     } catch (e) {
       throw new BadRequestException();

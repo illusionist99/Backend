@@ -44,12 +44,28 @@ export class ChatGateway
   @WebSocketServer()
   private server: Server;
   private userIdToSocketId: Map<string, string> = new Map<string, string>();
+  private usernameToSocketId: Map<string, string> = new Map<string, string>();
 
   async emitNewMessage(receiver: string, room: string) {
     if (this.userIdToSocketId.has(receiver))
       this.server
         .to(this.userIdToSocketId.get(receiver))
         .emit('newMessage', { room });
+    else {
+      console.log(receiver, 'is disconnected');
+    }
+  }
+
+  async emitNotification(
+    type: 'joinedRoom',
+    sender: string, // username
+    receiver: string,
+    room: { cid: string; name: string },
+  ) {
+    if (this.userIdToSocketId.has(receiver))
+      this.server
+        .to(this.userIdToSocketId.get(receiver))
+        .emit('notification', { type, sender, room });
     else {
       console.log(receiver, 'is disconnected');
     }
@@ -91,6 +107,7 @@ export class ChatGateway
     // update status
     // //('Disconnected : ', client.data);
     this.userIdToSocketId.delete(client.data?.user?.uid);
+    this.usernameToSocketId.delete(client.data?.user?.uid);
   }
 
   handleConnection(@ConnectedSocket() client: Socket, ...args: any[]) {
@@ -99,6 +116,7 @@ export class ChatGateway
   @SubscribeMessage('listeningForEvents') // newMessage , chat refresh , convs refresh
   async listeningForEvents(@ConnectedSocket() client: Socket) {
     this.userIdToSocketId.set(client.data.user.uid, client.id);
+    this.usernameToSocketId.set(client.data.user.uid, client.id);
   }
 
   @SubscribeMessage('createRoom')

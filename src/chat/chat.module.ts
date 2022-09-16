@@ -9,6 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ChatController } from './chat.controller';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 import { UserModule } from 'src/user/user.module';
+import { NotificationModule } from 'src/notifications/notification.module';
 
 @Module({
   providers: [ChatGateway, ChatService],
@@ -16,6 +17,7 @@ import { UserModule } from 'src/user/user.module';
     TypeOrmModule.forFeature([User, ChatRoom, ChatMessage]),
     AuthModule,
     UserModule,
+    NotificationModule,
   ],
   controllers: [ChatController],
   exports: [ChatService],
