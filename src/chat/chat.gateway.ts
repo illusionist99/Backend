@@ -100,7 +100,9 @@ export class ChatGateway
       .emit('chatRefreshRequest', { type, room, removedUser });
   }
 
-  afterInit(server: Server) {}
+  afterInit() {
+    //
+  }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
     //('user Logged Out ', client.data);

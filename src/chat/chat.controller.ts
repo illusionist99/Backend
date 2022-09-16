@@ -108,6 +108,21 @@ export class ChatController {
 
     return this.chatService.ban(userId, chatRoom, banned);
   }
+  // mute user
+  @Post('mute')
+  async muteUser(
+    @Body() data: { cid: string; uid: string; minutes: number },
+    @Request() req,
+  ): Promise<void> {
+    const userId: string = req.user.sub;
+    const chatRoom: string = data.cid;
+    const muted: string = data.uid;
+    const mutePeriod: number = data.minutes;
+
+    if (!userId || !chatRoom || !muted) throw new BadRequestException();
+
+    return this.chatService.mute(userId, muted, chatRoom, mutePeriod);
+  }
   // add members to chat room, join rooms
 
   @Post('join')

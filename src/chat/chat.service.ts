@@ -20,6 +20,7 @@ import { UserService } from 'src/user/user.service';
 import { ChatGateway } from './chat.gateway';
 import e from 'express';
 import { NotificationService } from 'src/notifications/notification.service';
+import { MuteService } from './mute/mute.service';
 
 type Message = {
   text: string;
@@ -44,6 +45,7 @@ export class ChatService {
     private readonly chatGateway: ChatGateway,
 
     private notifService: NotificationService,
+    private muteService: MuteService,
   ) {}
 
   async findOrCreatePrivateRoom(users: string[]) {
@@ -551,7 +553,35 @@ export class ChatService {
       banned,
     );
   }
+  async mute(
+    userId: string,
+    uid: string,
+    cid: string,
+    minutes: number,
+  ): Promise<any> {
+    const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
+      where: {
+        cid,
+      },
+      relations: ['admins', 'members'],
+    });
 
+    if (!chatRoom) throw new BadRequestException();
+
+    if (
+      //if not admin and not owner
+      !chatRoom.admins.find((u) => u.uid == userId) &&
+      chatRoom.owner != userId
+    )
+      throw new UnauthorizedException('not admin');
+
+    const mutedUntil = await this.muteService.getUserMute(uid, cid);
+    if (mutedUntil < Date.now()) {
+      return this.muteService.muteUser(uid, cid, minutes);
+    } else {
+      throw new BadRequestException('already muted');
+    }
+  }
   async create(createChatDto: createChatMessageDto): Promise<ChatMessage> {
     console.log('->>', createChatDto);
     return await this.chatMessageRepo.save(
@@ -756,9 +786,11 @@ export class ChatService {
         ...chat,
         name: chat.type === 'private' ? 'noname' : chat.name,
         owner: await this.userService.findOne(chat.owner),
+        mutedUntil: await this.muteService.getUserMute(uid, cid),
       };
       // get user from database ?
-    } catch {
+    } catch (e) {
+      console.log(e);
       throw new NotFoundException('room not found');
     }
   }

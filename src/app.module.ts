@@ -17,6 +17,7 @@ import { Game } from './entities/game.entity';
 import { tfaStatregy } from './auth/strategies/tfa.strategy';
 import { NotificationModule } from './notifications/notification.module';
 import { Notification } from './entities/notification.entity';
+import { Mute } from './entities/mute.entity';
 
 //console.log(process.env);
 
@@ -44,6 +45,7 @@ import { Notification } from './entities/notification.entity';
         friendsRequest,
         Game,
         Notification,
+        Mute,
       ],
       synchronize: true, // to remove when finished
     }),
