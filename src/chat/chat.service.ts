@@ -577,7 +577,14 @@ export class ChatService {
 
     const mutedUntil = await this.muteService.getUserMute(uid, cid);
     if (mutedUntil < Date.now()) {
-      return this.muteService.muteUser(uid, cid, minutes);
+      await this.muteService.muteUser(uid, cid, minutes);
+      this.chatGateway.emitChatRefreshRequest(
+        [uid],
+        cid,
+        'add', // just refreshing
+        uid,
+      );
+      return;
     } else {
       throw new BadRequestException('already muted');
     }
