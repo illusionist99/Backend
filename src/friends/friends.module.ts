@@ -6,6 +6,7 @@ import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 import { JwtStartegy } from 'src/auth/strategies/jwt.strategy';
 import { JwtStartRefresh } from 'src/auth/strategies/jwtRefresh.strategy';
 import { LocalStrat } from 'src/auth/strategies/local.strategy';
+import { ChatGateway } from 'src/chat/chat.gateway';
 import { ChatModule } from 'src/chat/chat.module';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
@@ -29,6 +30,10 @@ import { FriendsService } from './friends.service';
     {
       provide: 'FRIENDS_GATEWAY',
       useClass: FriendsGateway,
+    },
+    {
+      provide: 'CHAT_GATEWAY',
+      useClass: ChatGateway,
     },
     FriendsService,
   ],

@@ -664,11 +664,24 @@ export class ChatService {
     });
     // console.log('chat rooms  0', chatRooms);
     let result = [];
+
+    const blockedByList = await this.userService.getUserBlockedByList(uid);
+    const blockList = await this.userService.getUserBlockList(uid);
+
     chatRooms.map((chatroom) => {
       if (chatroom.name.includes('GAME_') || chatroom.name == 'public') return;
-      for (const id of chatroom.members) {
-        if (id.uid === uid) {
+      for (const user of chatroom.members) {
+        if (user.uid === uid) {
           // add check here to hide public room from convs list
+          if (
+            chatroom.type == 'private' &&
+            chatroom.members.find(
+              (u: User) =>
+                (u.uid != uid && blockedByList.find((b) => b.uid == u.uid)) ||
+                blockList.find((b) => b.uid == u.uid),
+            )
+          )
+            break;
           result.push(chatroom);
           break;
         }
@@ -760,7 +773,7 @@ export class ChatService {
     )
       throw new UnauthorizedException(" User is Banned can't send messages ");
 
-    const Messages: Message[] = chatRoom?.messages.map((message) => {
+    const messages: Message[] = chatRoom?.messages.map((message) => {
       return {
         text: message.text,
         date: message.createdAt,
@@ -769,8 +782,17 @@ export class ChatService {
       };
     });
     // console.log('messages', chatRoom.messages);
+    const blockList = await this.userService.getUserBlockList(uid);
 
-    return Messages;
+    console.log('BLOCK LIST for user ', uid, blockList, messages);
+
+    return messages.filter((m) => {
+      return !blockList.find((u: User) => {
+        u.uid == m.ownerId;
+      });
+    });
+
+    return messages;
   }
 
   async findRoomByName(name: string): Promise<any> {
@@ -793,13 +815,40 @@ export class ChatService {
         where: { cid: cid },
         relations: ['messages', 'admins', 'banned', 'members'],
       });
-      if (chat.banned.find((u) => u.uid == uid))
+
+      if (
+        !chat.members.find((u) => u.uid == uid) ||
+        chat.banned.find((u) => u.uid == uid)
+      )
         throw new UnauthorizedException();
+      const blockList = await this.userService.getUserBlockList(uid);
+      const blockedByList = await this.userService.getUserBlockedByList(uid);
+      console.log(
+        'BLOCKedBY LIST for user ',
+        uid,
+        blockedByList,
+        chat.messages,
+      );
+
+      if (chat.type == 'private') {
+        const other = chat.members.find((u) => uid != u.uid);
+        console.log('OTHER ', other);
+        if (blockedByList.find((u) => u.uid == other.uid))
+          throw new UnauthorizedException();
+        if (blockList.find((u) => u.uid == other.uid))
+          throw new UnauthorizedException();
+      }
+
       return {
         ...chat,
         name: chat.type === 'private' ? 'noname' : chat.name,
         owner: await this.userService.findOne(chat.owner),
         mutedUntil: await this.muteService.getUserMute(uid, cid),
+        messages: chat.messages.filter((m) => {
+          return !blockList.find((u: User) => {
+            return u.uid == m.ownerId;
+          });
+        }),
       };
       // get user from database ?
     } catch (e) {

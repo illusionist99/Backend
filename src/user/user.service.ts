@@ -13,12 +13,10 @@ import { CreateUserDto } from '../dtos/user.dto';
 import { UpdateUserDto } from '../dtos/user.dto';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
-import { randomInt } from 'crypto';
 import * as otplib from 'otplib';
 import { authenticator } from 'otplib';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
 import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class UserService {
@@ -91,13 +89,40 @@ export class UserService {
     });
   }
 
-  async searchUsers(uid: string, searchParam: string): Promise<User[]> {
-    searchParam = searchParam ? searchParam.trim() : '%%';
-    const users: User[] = await this.userRepo
-      .createQueryBuilder('user')
-      .where('user.username LIKE :s', { s: `%${searchParam}%` })
-      .getMany();
+  async getUserBlockList(uid: string) {
+    // list of
     const allBlocked = await this.friendRepo.find({
+      // get all user's friendships with blocked true
+      where: [
+        {
+          blocked: true,
+          receiver: uid,
+          blockedBy: uid,
+        },
+        {
+          blocked: true,
+          sender: uid,
+          blockedBy: uid,
+        },
+      ],
+    });
+
+    return await Promise.all(
+      allBlocked.map(async (fr) => {
+        return await this.userRepo.findOne({
+          where: {
+            uid: fr.receiver == uid ? fr.sender : fr.receiver,
+          },
+        });
+      }),
+    );
+  }
+
+  async getUserBlockedByList(uid: string) {
+    let users: User[] = await this.userRepo.find();
+
+    const allBlocked = await this.friendRepo.find({
+      // get all user's friendships with blocked true
       where: [
         {
           blocked: true,
@@ -109,9 +134,11 @@ export class UserService {
         },
       ],
     });
-    return users.filter((u) => {
+    console.log('all blocks of user ', uid, allBlocked);
+    users = users.filter((u) => {
+      // rleave users who blocked me
       if (
-        u.uid === uid ||
+        u.uid != uid &&
         allBlocked.find((request) => {
           return (
             (request.receiver === u.uid || request.sender === u.uid) &&
@@ -119,8 +146,24 @@ export class UserService {
           );
         })
       )
-        return false;
-      else return true;
+        return true;
+      else return false;
+    });
+
+    return users;
+  }
+
+  async searchUsers(uid: string, searchParam: string): Promise<User[]> {
+    searchParam = searchParam ? searchParam.trim() : '%%';
+    const users: User[] = await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.username LIKE :s', { s: `%${searchParam}%` })
+      .getMany();
+
+    const myBlockList = await this.getUserBlockedByList(uid);
+
+    return users.filter((u) => {
+      return u.uid != uid && !myBlockList.find((b) => b.uid == u.uid);
     });
   }
 
@@ -299,7 +342,7 @@ export class UserService {
 
     const lvlFactor = this.lvlFactor;
 
-    let xpNeededForLevel = user.level * lvlFactor;
+    const xpNeededForLevel = user.level * lvlFactor;
     let TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
     let currentXp = user.xp;
 

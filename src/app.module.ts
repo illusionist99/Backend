@@ -50,8 +50,9 @@ import { Mute } from './entities/mute.entity';
       synchronize: true, // to remove when finished
     }),
     UserModule,
-    friendsModule,
+
     ChatModule,
+    friendsModule,
     AuthModule,
     GameModule,
     NotificationModule,

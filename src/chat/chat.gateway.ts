@@ -16,11 +16,18 @@ import { Server, Socket } from 'socket.io';
 import { ChatMessage } from 'src/entities/chatMessage.entity';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
-import { forwardRef, Inject, Injectable, UseGuards } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -39,6 +46,7 @@ export class ChatGateway
     private readonly chatService: ChatService,
 
     @InjectRepository(User) private readonly repoUser: Repository<User>,
+    private readonly userService: UserService,
   ) {}
 
   @WebSocketServer()
@@ -150,6 +158,15 @@ export class ChatGateway
     @MessageBody() data: { receiver: string },
   ): Promise<any> {
     // //('user created Room', client.data.user);
+    // client.data.user.uid,
+    // ,
+
+    const blockedByList = await this.userService.getUserBlockedByList(
+      data.receiver,
+    );
+    if (blockedByList.find((u) => u.uid == client.data.user.uid))
+      throw new WsException('You are blocked');
+
     const room = await this.chatService.findOrCreatePrivateRoom([
       client.data.user.uid,
       data.receiver,
@@ -198,16 +215,29 @@ export class ChatGateway
       message['message'],
       roomO,
     );
+
     chatMessage.roomId = roomO.cid;
     chatMessage.username = client.data.user.username;
     chatMessage.text = message['message'];
 
-    this.server.to(message['room']).except(client.id).emit('msgToClient', {
-      ownerId: client.data.user.uid,
-      username: client.data.user.username,
-      text: message['message'],
-      room: message['room'],
-    });
+    const blockedByList = await this.userService.getUserBlockedByList(
+      chatMessage.ownerId,
+    );
+
+    this.server
+      .to(message['room'])
+      .except([
+        client.id,
+        ...blockedByList.map((u) => {
+          return this.userIdToSocketId.get(u.uid);
+        }),
+      ])
+      .emit('msgToClient', {
+        ownerId: client.data.user.uid,
+        username: client.data.user.username,
+        text: message['message'],
+        room: message['room'],
+      });
 
     // Notify
     if (message['room'] !== 'public' && !message['room'].includes('GAME_')) {
@@ -218,6 +248,12 @@ export class ChatGateway
       });
       this.server
         .to(membersToNotify.map((m: User) => this.userIdToSocketId.get(m.uid)))
+        .except([
+          client.id,
+          ...blockedByList.map((u) => {
+            return this.userIdToSocketId.get(u.uid);
+          }),
+        ])
         .emit('newMessage', { room: message['room'] });
     }
 
@@ -256,10 +292,21 @@ export class ChatGateway
   }
 
   @SubscribeMessage('messageToRoom')
-  messageToRoom(@ConnectedSocket() client: Socket, @MessageBody() body: any) {
+  async messageToRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: any,
+  ) {
     //(body, body['message']);
     const chatMessage: ChatMessage = new createChatMessageDto();
     //('Message To room from ', client.data.user);
+    const room = await this.chatService.findOne(client.data.user.uid, body[1]);
+    if (!room) throw new WsException('room  not found');
+    if (
+      room.banned.find((u) => {
+        return u.uid == client.data.user.uid;
+      })
+    )
+      throw new WsException('banned from room');
     chatMessage.ownerId = client.data.user.uid;
     chatMessage.roomId = body[1];
     chatMessage.text = body[0];

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { use } from 'passport';
+import { ChatGateway } from 'src/chat/chat.gateway';
 import { ChatService } from 'src/chat/chat.service';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
@@ -32,6 +33,8 @@ export class FriendsService {
 
     @InjectRepository(ChatRoom)
     private chatRepo: Repository<ChatRoom>,
+
+    @Inject('CHAT_GATEWAY') private readonly chatGateway: ChatGateway,
   ) {
     // this.friendsGateway.server.emit('notification', { hello: 'world' });
   }
@@ -183,6 +186,7 @@ export class FriendsService {
           receiver: userId,
         },
       ],
+      relations: ['sender', 'receiver'],
     });
 
     if (!friendship) {
@@ -194,16 +198,56 @@ export class FriendsService {
         blocked: true,
         blockedBy: userId,
       });
+      friendship = await this.friendRequestRepo.findOne({
+        where: { uid: friendship.uid },
+        relations: ['sender', 'receiver'],
+      });
       // console.log('friendship created ');
     } else console.log('friendship already exists ');
-
-    if (friendship.receiver !== userId && friendship.sender !== userId)
+    if (
+      (friendship.receiver as unknown as User).uid !== userId &&
+      (friendship.sender as unknown as User).uid !== userId
+    )
       throw new ForbiddenException();
-    return await this.friendRequestRepo.save({
+    await this.friendRequestRepo.save({
       ...friendship,
       blocked,
       blockedBy: userId,
+      sender: (friendship.sender as unknown as User).uid,
+      receiver: (friendship.receiver as unknown as User).uid,
     });
+    console.log(
+      friendship.sender as unknown as User,
+      friendship.receiver as unknown as User,
+    );
+    const r = await this.chatRepo.findOne({
+      where: {
+        type: 'private',
+        members: [
+          friendship.sender as unknown as User,
+          friendship.receiver as unknown as User,
+        ],
+      },
+    });
+    console.log('ROOOM  PRIVATE BLOCK ', r);
+    this.chatGateway.emitConvsRefreshRequest(
+      [
+        (friendship.sender as unknown as User).uid,
+        (friendship.receiver as unknown as User).uid,
+      ],
+      r.cid,
+      'remove',
+      '*',
+    );
+    this.chatGateway.emitChatRefreshRequest(
+      [
+        (friendship.sender as unknown as User).uid,
+        (friendship.receiver as unknown as User).uid,
+      ],
+      r.cid,
+      'remove',
+      '*',
+    );
   }
 
   async unblockFriendRequest(
@@ -211,15 +255,17 @@ export class FriendsService {
     uid: string,
     blocked: boolean,
   ): Promise<any> {
-    const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
+    const friendship = await this.friendRequestRepo.findOne({
+      where: [
+        { receiver: uid, sender: userId, blocked: true },
+        { receiver: userId, sender: uid, blocked: true },
+      ],
+    });
 
     if (!friendship) throw new ForbiddenException();
 
-    if (friendship.receiver !== userId && friendship.sender !== userId)
-      throw new ForbiddenException();
-
     if (userId === friendship.blockedBy) {
-      return await this.friendRequestRepo.delete(uid);
+      return await this.friendRequestRepo.delete(friendship.uid);
     }
     throw new UnauthorizedException();
   }

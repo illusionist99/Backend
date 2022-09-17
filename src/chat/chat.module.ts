@@ -22,6 +22,6 @@ import { MuteService } from './mute/mute.service';
     NotificationModule,
   ],
   controllers: [ChatController],
-  exports: [ChatService],
+  exports: [ChatGateway, ChatService],
 })
 export class ChatModule {}
