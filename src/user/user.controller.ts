@@ -18,6 +18,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -121,10 +122,14 @@ export class UserController {
   }
   @Patch('nickname')
   async updateNickname(@Req() req: any, @Body() data: { nickname: string }) {
-    return this.userService.update(req.user.sub, {
-      file: null,
-      nickname: data.nickname,
-    });
+    try{
+      return this.userService.update(req.user.sub, {
+        file: null,
+        nickname: data.nickname,
+      });
+    }catch(e){
+      throw new BadRequestException();
+    }
   }
 
   @Patch('status')
