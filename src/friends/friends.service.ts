@@ -33,7 +33,6 @@ export class FriendsService {
 
     @InjectRepository(ChatRoom)
     private chatRepo: Repository<ChatRoom>,
-
     @Inject('CHAT_GATEWAY') private readonly chatGateway: ChatGateway,
   ) {
     // this.friendsGateway.server.emit('notification', { hello: 'world' });
@@ -209,6 +208,7 @@ export class FriendsService {
       (friendship.sender as unknown as User).uid !== userId
     )
       throw new ForbiddenException();
+
     await this.friendRequestRepo.save({
       ...friendship,
       blocked,

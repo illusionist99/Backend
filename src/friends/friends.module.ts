@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/auth/auth.module';
 import { AuthService } from 'src/auth/auth.service';
@@ -33,8 +33,9 @@ import { FriendsService } from './friends.service';
     },
     {
       provide: 'CHAT_GATEWAY',
-      useClass: ChatGateway,
+      useExisting: ChatGateway,
     },
+    //ChatGateway,
     FriendsService,
   ],
   exports: [FriendsService],

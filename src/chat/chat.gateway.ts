@@ -20,6 +20,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Scope,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -29,7 +30,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 
-@Injectable()
+@Injectable({ scope: Scope.DEFAULT })
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost', 'http://localhost:8000'],
@@ -47,7 +48,9 @@ export class ChatGateway
 
     @InjectRepository(User) private readonly repoUser: Repository<User>,
     private readonly userService: UserService,
-  ) {}
+  ) {
+    console.log('GATEWAY CONSSTRRUCTOJDSGOJGSJDD');
+  }
 
   @WebSocketServer()
   private server: Server;
@@ -256,16 +259,9 @@ export class ChatGateway
         ])
         .emit('newMessage', { room: message['room'] });
     }
-
+    console.log('EMITING GFGDFGSDFGSDF');
     return this.chatService.create(chatMessage);
   }
-
-  // @SubscribeMessage('msgToServer')
-  // async create(@MessageBody() createChatDto: createChatMessageDto) : Promise<ChatMessage> {
-
-  //   this.server.emit('msgToClient', createChatDto);
-  //   return  this.chatService.create(createChatDto);
-  // }
 
   @SubscribeMessage('joinRoomToServer')
   async joinRoom(client: Socket, room: string) {
