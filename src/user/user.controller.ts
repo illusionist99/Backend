@@ -122,12 +122,13 @@ export class UserController {
   }
   @Patch('nickname')
   async updateNickname(@Req() req: any, @Body() data: { nickname: string }) {
-    try{
-      return this.userService.update(req.user.sub, {
+    try {
+      return await this.userService.update(req.user.sub, {
         file: null,
         nickname: data.nickname,
       });
-    }catch(e){
+    } catch (e) {
+      console.log(e);
       throw new BadRequestException();
     }
   }
