@@ -117,7 +117,7 @@ export class FriendsService {
   }
   async getFriendRequestsForUser(userId: string): Promise<any[]> {
     return this.friendRequestRepo.find({
-      where: [{ status: false, receiver: userId }],
+      where: [{ status: false, receiver: userId, blocked: false }],
       relations: ['sender'],
     });
   }
@@ -186,16 +186,17 @@ export class FriendsService {
     });
 
     if (!friendship) {
-      friendship = this.friendRequestRepo.create({
+      console.log(friendship);
+      friendship = await this.friendRequestRepo.save({
         sender: userId,
         receiver: toBlockuid,
         status: false,
         blocked: true,
         blockedBy: userId,
       });
-      await this.friendRequestRepo.save(friendship);
       // console.log('friendship created ');
     } else console.log('friendship already exists ');
+
     if (friendship.receiver !== userId && friendship.sender !== userId)
       throw new ForbiddenException();
     return await this.friendRequestRepo.save({
@@ -213,6 +214,7 @@ export class FriendsService {
     const friendship = await this.friendRequestRepo.findOne({ where: { uid } });
 
     if (!friendship) throw new ForbiddenException();
+
     if (friendship.receiver !== userId && friendship.sender !== userId)
       throw new ForbiddenException();
 

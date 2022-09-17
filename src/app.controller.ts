@@ -144,7 +144,7 @@ export class AppController {
     return {
       access_token: tokens['access_token'],
       isNew,
-      username: newUser.username,
+      username: newUser?.username,
     };
   }
 

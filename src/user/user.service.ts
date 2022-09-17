@@ -97,7 +97,31 @@ export class UserService {
       .createQueryBuilder('user')
       .where('user.username LIKE :s', { s: `%${searchParam}%` })
       .getMany();
-    return users.filter((u) => u.uid != uid);
+    const allBlocked = await this.friendRepo.find({
+      where: [
+        {
+          blocked: true,
+          receiver: uid,
+        },
+        {
+          blocked: true,
+          sender: uid,
+        },
+      ],
+    });
+    return users.filter((u) => {
+      if (
+        u.uid === uid ||
+        allBlocked.find((request) => {
+          return (
+            (request.receiver === u.uid || request.sender === u.uid) &&
+            request.blockedBy != uid
+          );
+        })
+      )
+        return false;
+      else return true;
+    });
   }
 
   // async updateAvatar(uid: string, @UploadedFile() avatar: Express.Multer.File) {
@@ -122,7 +146,7 @@ export class UserService {
     newUser.refreshToken = '';
     password = undefined;
     newUser.chatRooms = [];
-    newUser.avatar = 'https://api.multiavatar.com/' + newUser.nickname + '.svg';
+    newUser.avatar = process.env.USERS_AVATAR_API + newUser.nickname + '.svg';
     // createUserDto.password = bycrypt
     // //console.log(newUser, username, password);
     // this.userRepo.create(newUser);

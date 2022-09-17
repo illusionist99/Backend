@@ -341,7 +341,7 @@ export class ChatService {
       where: {
         cid,
       },
-      relations: ['admins', 'members'],
+      relations: ['admins', 'members', 'banned'],
     });
 
     function notMember(member: User): boolean {

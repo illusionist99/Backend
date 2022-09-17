@@ -218,8 +218,7 @@ export class AuthService {
     newUser.nickname = userData.data.displayname;
     // newUser.avatar = userData.data.image_url;
     newUser.username = userData.data.login;
-    newUser.avatar =
-      'https://avatars.dicebear.com/api/identicon/' + newUser.username + '.svg';
+    newUser.avatar = process.env.USERS_AVATAR_API + newUser.username + '.svg';
     // const chatRoom = new ChatRoom;
     // newUser.chatRooms =  [chatRoom];
     newUser.password = 'defaultpassword';

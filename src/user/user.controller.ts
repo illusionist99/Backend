@@ -59,6 +59,9 @@ export class UserController {
     // };
     if (r) {
       if (r.blocked) {
+        if (r.blockedBy != me) {
+          throw new NotFoundException();
+        }
         rule = 'blocked';
       } else if (r.status) {
         rule = 'friends';
