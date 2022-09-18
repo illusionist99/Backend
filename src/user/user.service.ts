@@ -287,7 +287,11 @@ export class UserService {
       avatar = url + `/` + newImageName.substring(8);
     }
     const updated = { ...user, nickname, avatar };
+    // try {
     return await this.userRepo.save(updated);
+    // } catch (e) {
+    //   throw new BadRequestException();
+    // }
   }
 
   async updateRt(uid: string, hash: string) {

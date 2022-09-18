@@ -4,6 +4,7 @@ import {
   Injectable,
   Request,
   Response,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
@@ -124,15 +125,23 @@ export class AuthService {
   }
 
   async verifyRT(refreshToken: string) {
-    return await this.jwtService.verify(refreshToken, {
-      secret: process.env.RFH_SECRET,
-    });
+    try {
+      return await this.jwtService.verify(refreshToken, {
+        secret: process.env.RFH_SECRET,
+      });
+    } catch (e) {
+      throw new UnauthorizedException('not logged in');
+    }
   }
 
   async verify(authToken: string) {
-    return await this.jwtService.verify(authToken, {
-      secret: process.env.JWT_SECRET,
-    });
+    try {
+      return await this.jwtService.verify(authToken, {
+        secret: process.env.JWT_SECRET,
+      });
+    } catch (e) {
+      throw new UnauthorizedException('not logged in');
+    }
   }
 
   async ValidateUser(username: string, password: string): Promise<any> {
@@ -209,7 +218,7 @@ export class AuthService {
 
       await this.updateRtHash(user.uid, tokens.refreshToken);
 
-      return { user, tokens, isNew: false };
+      return { newUser: user, tokens, isNew: false };
     }
 
     const newUser = new CreateUserDto();

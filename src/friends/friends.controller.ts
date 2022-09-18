@@ -6,11 +6,13 @@ import {
   Body,
   ForbiddenException,
   Get,
+  BadRequestException,
 } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import { friendsRequest } from 'src/entities/friendRequest.entity';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
+const validate = require('uuid-validate');
 
 @Controller('friends')
 @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
@@ -21,6 +23,8 @@ export class FriendsController {
   async addFriend(@Request() req, @Body() payload): Promise<friendsRequest> {
     const sender: string = payload['sender'];
     const receiver: string = payload['receiver'];
+    if (!validate(sender) || !validate(receiver))
+      throw new BadRequestException();
     const userId: string = req.user.sub;
 
     const friendRequest: friendsRequest = await this.friendsService.findOne(
@@ -41,6 +45,8 @@ export class FriendsController {
     @Request() req,
     @Body() payload,
   ): Promise<friendsRequest> {
+    if (!validate(payload['uid'])) throw new BadRequestException();
+
     const uid: string = payload['uid'];
     const userId: string = req.user.sub;
 
@@ -51,6 +57,8 @@ export class FriendsController {
 
   @Post('decline')
   async delete(@Body() body) {
+    if (!validate(body['uid'])) throw new BadRequestException();
+
     const uid = body['uid'];
     await this.friendsService.delete(uid);
   }
@@ -77,6 +85,7 @@ export class FriendsController {
   ): Promise<friendsRequest> {
     const uid: string = payload['uid'];
     const userId: string = req.user.sub;
+    if (!validate(payload['uid'])) throw new BadRequestException();
 
     if (!uid || !userId) throw new ForbiddenException();
     return this.friendsService.blockFriendRequest(userId, uid, true);
@@ -89,6 +98,7 @@ export class FriendsController {
   ): Promise<friendsRequest> {
     const userId: string = req.user.sub;
     const uid: string = payload['uid'];
+    if (!validate(payload['uid'])) throw new BadRequestException();
 
     if (!uid) throw new ForbiddenException();
     return this.friendsService.unblockFriendRequest(userId, uid, false);
