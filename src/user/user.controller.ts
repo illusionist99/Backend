@@ -20,12 +20,13 @@ import {
   FileTypeValidator,
   BadRequestException,
 } from '@nestjs/common';
+
 import { UserService } from './user.service';
 import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/entities/user.entity';
 import { diskStorage } from 'multer';
-
+const validate = require('uuid-validate');
 @Controller('user')
 @UseGuards(JwtAuthGuard, jwtRefreshAuthGuard)
 export class UserController {
@@ -43,6 +44,7 @@ export class UserController {
 
   @Get(':username')
   async getUser(@Param('username') username: string, @Req() req): Promise<any> {
+    if (!username.length) throw new BadRequestException();
     const user: User = await this.userService.findByUsername(username);
     if (!user) throw new NotFoundException();
 
@@ -86,6 +88,7 @@ export class UserController {
 
   @Get('id/:id')
   async findOne(@Param('id') id: string) {
+    if (!validate(id)) throw new BadRequestException();
     return this.userService.findOne(id);
   }
 
@@ -122,6 +125,7 @@ export class UserController {
   }
   @Patch('nickname')
   async updateNickname(@Req() req: any, @Body() data: { nickname: string }) {
+    if (!data?.nickname.length) throw new BadRequestException();
     try {
       return await this.userService.update(req.user.sub, {
         file: null,
@@ -138,6 +142,8 @@ export class UserController {
     @Req() req: any,
     @Body() data: { status: 'online' | 'offline' | 'playing' | 'spectating' },
   ) {
+    if (!['online', 'offline', 'playing', 'spectating'].includes(data?.status))
+      throw new BadRequestException();
     return this.userService.setStatus(req.user.sub, data.status);
   }
   // @Post(':id/avatar') // update avatar
@@ -150,6 +156,7 @@ export class UserController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
+    if (!validate(id)) throw new BadRequestException();
     return this.userService.remove(id);
   }
 }

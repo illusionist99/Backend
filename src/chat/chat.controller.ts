@@ -16,7 +16,7 @@ import { JwtAuthGuard, jwtRefreshAuthGuard } from 'src/auth/guards/jwt.guard';
 import { createChatRoomDto } from 'src/dtos/chatRoom.dto';
 import { ChatRoom } from 'src/entities/chatRoom.entity';
 import { ChatService } from './chat.service';
-
+const validate = require('uuid-validate');
 @Controller('chat')
 @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
 export class ChatController {
@@ -36,6 +36,9 @@ export class ChatController {
     @Body() data: { cid: string; uid: string },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || !validate(data['uid']))
+      throw new BadRequestException();
+
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const newAdmin: string = data.uid;
@@ -52,6 +55,8 @@ export class ChatController {
     @Body() data: { cid: string; members: string[] },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || data.members.find((m) => !validate(m)))
+      throw new BadRequestException();
     const userId = req.user.sub as string;
     const chatRoom = data.cid;
     const newMembers = data.members;
@@ -69,6 +74,8 @@ export class ChatController {
     @Body() data: { cid: string; uid: string },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || !validate(data['uid']))
+      throw new BadRequestException();
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const deleteAdmin: string = data.uid;
@@ -82,6 +89,8 @@ export class ChatController {
     @Body() data: { cid: string; uid: string },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || !validate(data['uid']))
+      throw new BadRequestException();
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const deleteMember: string = data.uid;
@@ -100,6 +109,8 @@ export class ChatController {
     @Body() data: { cid: string; uid: string },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || !validate(data['uid']))
+      throw new BadRequestException();
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const banned: string = data.uid;
@@ -114,6 +125,8 @@ export class ChatController {
     @Body() data: { cid: string; uid: string; minutes: number },
     @Request() req,
   ): Promise<void> {
+    if (!validate(data['cid']) || !validate(data['uid']))
+      throw new BadRequestException();
     const userId: string = req.user.sub;
     const chatRoom: string = data.cid;
     const muted: string = data.uid;
@@ -130,6 +143,7 @@ export class ChatController {
     @Request() req,
     @Body() data: { roomId: string; password: string },
   ) {
+    if (!validate(data['roomId'])) throw new BadRequestException();
     const userId: string = req.user.sub;
     const chatRoom: string = data.roomId;
     const hash: string = data.password;
@@ -142,7 +156,7 @@ export class ChatController {
   async leaveRoom(@Request() req, @Body() data: { cid: string }) {
     const uid: string = req.user.sub;
     const cid: string = data.cid;
-
+    if (!validate(data['cid'])) throw new BadRequestException();
     if (!uid || !cid) throw new UnauthorizedException();
 
     return this.chatService.leaveRoom(uid, cid);
@@ -154,7 +168,7 @@ export class ChatController {
   async deleteRoom(@Request() req, @Param('id') id: string) {
     const userId: string = req.user.sub;
     const chatRoom: string = id;
-
+    if (!validate(id)) throw new BadRequestException();
     if (!userId || !chatRoom) throw new UnauthorizedException();
     return this.chatService.deleteRoom(userId, chatRoom);
   }
@@ -165,6 +179,7 @@ export class ChatController {
     @Body()
     data: { cid: string; oldPass: string; newPass: string },
   ) {
+    if (!validate(data['cid'])) throw new BadRequestException();
     const userId = req.user.sub;
     return this.chatService.updateRoomPass(userId, {
       cid: data.cid,
@@ -178,6 +193,7 @@ export class ChatController {
     @Request() req,
     @Body() data: { cid: string; oldPass: string },
   ) {
+    if (!validate(data['cid'])) throw new BadRequestException();
     const userId = req.user.sub;
     return this.chatService.deleteRoomPass(userId, data.cid, data.oldPass);
   }
@@ -195,7 +211,7 @@ export class ChatController {
   @Get('/messages/:roomname')
   async getAllMessages(@Param('roomname') roomName: string, @Request() req) {
     console.log(' looking for room name ', roomName);
-    if (!roomName) throw new Error('specify room name');
+    if (!roomName) throw new BadRequestException('specify room name');
     const userId: string = req.user.sub;
 
     return this.chatService.findAllMessages(userId, roomName);
@@ -208,6 +224,7 @@ export class ChatController {
 
   @Get(':cid')
   async getRoomBycid(@Req() req, @Param('cid') cid: string) {
+    if (!validate(cid)) throw new BadRequestException();
     console.log(' looking for room id : ', cid);
     return this.chatService.findOne(req.user.sub, cid);
   }
