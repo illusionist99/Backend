@@ -271,7 +271,15 @@ export class UserService {
         uid: id,
       },
     });
-    if (!user) throw new UnauthorizedException();
+    const nicknameExists = await this.userRepo.findOne({
+      where: {
+        nickname: data.nickname,
+      },
+    });
+    console.log('nickname', nicknameExists, 'nickname ', data.nickname, data);
+    if (nicknameExists)
+      throw new UnauthorizedException('nickname Already Used');
+    if (!user) throw new UnauthorizedException('User Not Found');
     if (!data.file && !data.nickname) throw new BadRequestException();
     const nickname = data.nickname || user.nickname;
     let avatar = user.avatar;

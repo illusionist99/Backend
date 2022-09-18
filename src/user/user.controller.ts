@@ -19,6 +19,7 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { UserService } from './user.service';
@@ -132,7 +133,11 @@ export class UserController {
         nickname: data.nickname,
       });
     } catch (e) {
-      console.log(e);
+      if (e instanceof UnauthorizedException) {
+        throw e;
+      } else if (e instanceof BadRequestException) {
+        throw e;
+      }
       throw new BadRequestException();
     }
   }

@@ -541,6 +541,7 @@ export class ChatService {
     const r = await this.chatRoomRepo.save({
       ...chatRoom,
       members: chatRoom.members.filter((u) => u.uid != banned),
+      admins: chatRoom.admins.filter((u) => u.uid != banned),
       banned: [
         ...chatRoom.banned,
         await this.userRepo.findOneOrFail({ where: { uid: banned } }),

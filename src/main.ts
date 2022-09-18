@@ -11,7 +11,7 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.use(cookieParser());
   app.enableCors({
-    origin: ['http://10.12.2.4'],
+    origin: ['http://localhost'],
     credentials: true,
   });
   await app.listen(3500);

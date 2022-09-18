@@ -25,9 +25,9 @@ import { Repository } from 'typeorm';
 @WebSocketGateway({
   cors: {
     origin: [
-      'http://10.12.2.4',
-      'http://10.12.2.4:3001',
-      'http://10.12.2.4:3500',
+      'http://localhost',
+      'http://localhost:3001',
+      'http://localhost:3500',
     ],
     credentials: true,
   },
