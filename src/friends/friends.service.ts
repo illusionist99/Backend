@@ -105,8 +105,8 @@ export class FriendsService {
     const reqs = await this.friendRequestRepo.find({
       select: ['receiver', 'sender'],
       where: [
-        { status: true, receiver: userId },
-        { status: true, sender: userId },
+        { status: true, receiver: userId, blocked: false },
+        { status: true, sender: userId, blocked: false },
       ],
       relations: ['receiver', 'sender'],
     });
