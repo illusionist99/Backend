@@ -71,7 +71,10 @@ export class AppController {
     );
 
     if (refreshToken) {
-      res.cookie('jwt-rft', refreshToken, { httpOnly: true });
+      res.cookie('jwt-rft', refreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
       return { message: 'Tfa Enabled Correctly' };
     }
     throw new ForbiddenException();
@@ -109,12 +112,15 @@ export class AppController {
     if (!isCodeValid) {
       throw new UnauthorizedException('Wrong authentication code');
     }
-    res.cookie('tfa-rft', new Date(), { httpOnly: true });
+    res.cookie('tfa-rft', new Date(), { httpOnly: true, sameSite: 'strict' });
 
     //console.log('code is valid ', isCodeValid);
     const tokens = await this.authService.loginWith2fa(request.user.sub);
     if (!tokens) throw new ForbiddenException();
-    res.cookie('jwt-rft', tokens['refreshToken'], { httpOnly: true });
+    res.cookie('jwt-rft', tokens['refreshToken'], {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
     return { access_token: tokens['access_token'] };
   }
 
@@ -134,13 +140,19 @@ export class AppController {
     if (tokens['tfaEnabled'] === true) {
       const jwtTfa = await this.authService.tfaJwt(newUser, tokens);
 
-      res.cookie('tfa-rft', jwtTfa['tfaAccess'], { httpOnly: true });
+      res.cookie('tfa-rft', jwtTfa['tfaAccess'], {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
 
       res.status(201);
       return;
     }
 
-    res.cookie('jwt-rft', tokens['refreshToken'], { httpOnly: true });
+    res.cookie('jwt-rft', tokens['refreshToken'], {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
     return {
       access_token: tokens['access_token'],
       isNew,
@@ -163,14 +175,20 @@ export class AppController {
     if (payload['tfaEnabled'] === true) {
       const jwtTfa = await this.authService.tfaJwt(user, payload);
 
-      res.cookie('tfa-rft', jwtTfa['tfaAccess'], { httpOnly: true });
+      res.cookie('tfa-rft', jwtTfa['tfaAccess'], {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
 
       res.status(201);
       return;
     }
 
     if (payload) {
-      res.cookie('jwt-rft', payload['refreshToken'], { httpOnly: true });
+      res.cookie('jwt-rft', payload['refreshToken'], {
+        httpOnly: true,
+        sameSite: 'strict',
+      });
       await this.authService.updateRtHash(req.user.uid, payload.refreshToken);
 
       return payload;
@@ -188,7 +206,11 @@ export class AppController {
   @UseGuards(jwtRefreshAuthGuard)
   logout(@Request() req, @Response({ passthrough: true }) res) {
     //console.log('request dyal logout ', req.user);
-    res.cookie('jwt-rft', { expires: Date.now() }, { httpOnly: true });
+    res.cookie(
+      'jwt-rft',
+      { expires: Date.now() },
+      { httpOnly: true, sameSite: 'strict' },
+    );
   }
 
   @Post('auth/signup')
