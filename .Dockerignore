@@ -1,11 +1,3 @@
 src
 dist
-static
 node_modules
-.*
-tsconfig*
-t.t
-README.md
-nest-cli.json
-dev.env
-db.sqlite
