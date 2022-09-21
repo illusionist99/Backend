@@ -650,7 +650,7 @@ export class ChatService {
 
       return r;
     } catch (e) {
-      throw new BadRequestException();
+      throw new BadRequestException('name already used');
     }
   }
 

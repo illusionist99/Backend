@@ -1,34 +1,20 @@
 import {
   WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
   WebSocketServer,
   OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  WsResponse,
-  WsException,
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, UseGuards } from '@nestjs/common';
-import { JwtWebSocketGuard } from 'src/auth/guards/jwtWS.guard';
+import { Injectable } from '@nestjs/common';
 import { User } from 'src/entities/user.entity';
-import { flatMap } from 'rxjs';
 import { AuthService } from 'src/auth/auth.service';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
 
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost',
-      'http://localhost:3001',
-      'http://localhost:3500',
-    ],
+    origin: [process.env.CORS || 'http://localhost'],
     credentials: true,
   },
   namespace: 'friends',

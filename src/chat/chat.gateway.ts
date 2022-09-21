@@ -33,11 +33,7 @@ import { UserService } from 'src/user/user.service';
 @Injectable({ scope: Scope.DEFAULT })
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost',
-      'http://localhost:3001',
-      'http://localhost:3500',
-    ],
+    origin: [process.env.CORS || 'http://localhost'],
     credentials: true,
   },
   namespace: '/',
