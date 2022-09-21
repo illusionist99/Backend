@@ -19,9 +19,7 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
     }
 
     async validate(access_token: string, refreshToken: string, profile: any, cb: any) {
-    
 
-        //console.log('Calling validate Function throught 42 Contoller')
 
         if (!profile)
             return null;
@@ -37,7 +35,6 @@ export class fortyTwoStrat extends PassportStrategy(Strategy) {
         const saltOrRounds = 10;
         const hash = await bcrypt.hash("defaultpass", saltOrRounds);
         user.password = hash;
-        //console.log(user);
         return cb(null, await this.userService.create(user));
     }
 

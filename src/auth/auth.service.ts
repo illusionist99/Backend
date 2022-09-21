@@ -40,7 +40,6 @@ export class AuthService {
       tfaAuth: true,
     };
 
-    //console.log('new payload ', payload);
     return {
       access_token: await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
@@ -101,14 +100,11 @@ export class AuthService {
 
     const payload = await this.verifyRT(refreshToken);
 
-    //console.log('Payload from cookie ', payload);
     const user = await this.userService.findByUsername(payload.username);
 
     if (!user) throw new ForbiddenException();
 
-    //console.log(user.refreshToken);
     if (await bcrypt.compare(refreshToken, user.refreshToken)) {
-      //console.log('Payload matchs rft in db  ', payload);
       const tokens = await this.getTokens(
         payload.sub,
         payload.username,
@@ -179,17 +175,9 @@ export class AuthService {
         },
       });
     } catch (error) {
-      //console.log(error);
-      console.log(
-        error,
-        process.env.clientID,
-        process.env.clientSecret,
-        process.env.callbackURL,
-      );
       return error;
     }
 
-    //console.log('authToken: ', authToken);
     const token = authToken.data['access_token'];
     let userData;
     try {
@@ -203,11 +191,9 @@ export class AuthService {
     } catch (error) {
       return error;
     }
-    //console.log(' user DAta : ', userData.data);
 
     const user = await this.userService.findByUsername(userData.data.login);
 
-    //console.log('checking user', user);
     if (user) {
       const tokens = await this.getTokens(
         user.uid,
@@ -240,7 +226,6 @@ export class AuthService {
     );
     await this.updateRtHash(newUser.uid, tokens.refreshToken);
 
-    console.log('created New User and assigned RefreshToken', newUser);
     return { newUser, tokens, isNew: true };
   }
 

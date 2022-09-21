@@ -67,7 +67,6 @@ export class FriendsController {
   async getAllFriendRooms(@Request() req): Promise<ChatRoom[]> {
     const uid: string = req.user.sub;
 
-    console.log('Getting all Rooms ');
     if (!uid) throw new ForbiddenException();
     return this.friendsService.getAllFriendRooms(uid);
   }

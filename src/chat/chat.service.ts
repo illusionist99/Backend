@@ -63,7 +63,6 @@ export class ChatService {
     const room = chatRooms.filter((c) => {
       return (
         c.members.filter((m) => {
-          // console.log("filtering members", m.uid,(friendRequest.sender), (friendRequest.receiver))
           return m.uid == users[0] || m.uid == users[1];
         }).length == 2
       );
@@ -113,9 +112,7 @@ export class ChatService {
       throw new ForbiddenException();
 
     if (chatRoom.type === 'protected') {
-      console.log('passord --> ', password, chatRoom.password);
       const isMatch = await await bcrypt.compare(password, chatRoom.password);
-      console.log('does password match ? ', isMatch);
       if (!isMatch) throw new ForbiddenException('Wrong Password !!');
     }
     chatRoom.members = [...chatRoom.members, user];
@@ -136,14 +133,12 @@ export class ChatService {
   }
 
   async deleteRoom(uid: string, cid: string) {
-    console.log('cid', cid, uid);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: {
         cid,
       },
       relations: ['members'],
     });
-    console.log(' chat room ', chatRoom);
     if (!chatRoom || chatRoom.owner !== uid) throw new ForbiddenException();
     this.chatGateway.emitConvsRefreshRequest(
       chatRoom.members.map((u: User) => u.uid),
@@ -216,7 +211,6 @@ export class ChatService {
       if (chatRoom.type != 'protected') {
         throw new ForbiddenException('not a protected room');
       }
-      console.log('passes to compare', oldPass, chatRoom.password);
       const isMatch = await bcrypt.compare(oldPass, chatRoom.password);
       if (!isMatch) throw new ForbiddenException('Wrong Password !!');
       await this.chatRoomRepo.save({
@@ -240,7 +234,6 @@ export class ChatService {
       relations: ['admins', 'members'],
     });
 
-    console.log('---->1');
     if (!chatRoom) throw new UnauthorizedException();
     if (
       chatRoom.admins.find((admin) => {
@@ -248,14 +241,12 @@ export class ChatService {
       })
     )
       return new Error(' User is Already an Admin');
-    console.log('---->2');
     if (
       chatRoom.owner === uid ||
       chatRoom.admins.find((admin) => {
         return admin.uid === uid;
       })
     ) {
-      // console.log('---->3', chatRoom.admins);
       // await this.chatRoomRepo.update(cid, {
       //   admins: [
       //     ...chatRoom.admins,
@@ -295,7 +286,6 @@ export class ChatService {
       relations: ['admins', 'members'],
     });
 
-    console.log('---->1');
     if (!chatRoom) throw new UnauthorizedException();
     if (
       !chatRoom.admins.find((admin) => {
@@ -303,14 +293,12 @@ export class ChatService {
       })
     )
       return new UnauthorizedException(); // not an admin
-    console.log('---->2');
     if (
       chatRoom.owner === uid ||
       chatRoom.admins.find((admin) => {
         return admin.uid === uid;
       })
     ) {
-      // console.log('---->3', chatRoom.admins);
       // await this.chatRoomRepo.update(cid, {
       //   admins: [
       //     ...chatRoom.admins,
@@ -346,12 +334,10 @@ export class ChatService {
 
     function notMember(member: User): boolean {
       const found = chatRoom.members.find((m) => member.uid == m.uid);
-      console.log('!!!!', !!found, found, member);
       return !found;
     }
     function notBanned(member: User): boolean {
       const banned = chatRoom?.banned.find((m) => member.uid == m.uid);
-      console.log('!!!!', !!banned, banned, member);
       return !banned;
     }
 
@@ -455,7 +441,6 @@ export class ChatService {
   }
 
   async leaveRoom(uid: string, cid: string) {
-    console.log('-----> leave roooom');
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: {
         cid,
@@ -463,7 +448,6 @@ export class ChatService {
       relations: ['members', 'admins'],
     });
     if (!chatRoom) throw new NotFoundException('chat room not found');
-    console.log('-----> leave roooom 2');
 
     if (chatRoom.owner != uid) {
       this.chatGateway.emitConvsRefreshRequest(
@@ -484,13 +468,11 @@ export class ChatService {
         admins: chatRoom.admins.filter((ad) => ad.uid != uid),
       });
     }
-    console.log('leaving member is owner------>');
     const updatedRoom = {
       ...chatRoom,
       members: [...chatRoom.members.filter((mem) => mem.uid != uid)],
       admins: [...chatRoom.admins.filter((ad) => ad.uid != uid)],
     };
-    console.log('updated rooom', updatedRoom);
 
     let newOwner = updatedRoom.admins[0];
     if (!newOwner) newOwner = updatedRoom.members[0];
@@ -498,7 +480,6 @@ export class ChatService {
       return await this.deleteRoom(uid, cid);
     }
 
-    console.log('new owner', newOwner, updatedRoom);
     await this.chatRoomRepo.save({
       ...updatedRoom,
       owner: newOwner.uid,
@@ -597,7 +578,6 @@ export class ChatService {
     }
   }
   async create(createChatDto: createChatMessageDto): Promise<ChatMessage> {
-    console.log('->>', createChatDto);
     return await this.chatMessageRepo.save(
       this.chatMessageRepo.create(createChatDto),
     );
@@ -615,7 +595,6 @@ export class ChatService {
 
     if (createChatRoom.name === null)
       createChatRoom.name = Math.random().toString(36);
-    console.log('creation ', createChatRoom);
     try {
       const r = await this.chatRoomRepo.save(createChatRoom);
       // this.chatRoomRepo.create(createChatRoom);
@@ -663,7 +642,6 @@ export class ChatService {
     const chatRooms: ChatRoom[] = await this.chatRoomRepo.find({
       relations: ['members', 'messages'],
     });
-    // console.log('chat rooms  0', chatRooms);
     let result = [];
 
     const blockedByList = await this.userService.getUserBlockedByList(uid);
@@ -688,15 +666,9 @@ export class ChatService {
         }
       }
     });
-    console.log('result : ', result);
 
     result = await Promise.all(
       result.map(async (chatRoom) => {
-        console.log(
-          'chatroom is null : ',
-          chatRoom.type === 'private' ? 'private' : chatRoom.name,
-        );
-
         return {
           cid: chatRoom.cid,
           name: chatRoom.type === 'private' ? 'noname' : chatRoom.name,
@@ -738,7 +710,6 @@ export class ChatService {
       if (chatroom.banned.find((u) => u.uid == uid)) return;
       result.push(chatroom);
     });
-    console.log('result : ', result);
     return await Promise.all(
       result.map(async (chatRoom) => {
         return {
@@ -755,7 +726,6 @@ export class ChatService {
   }
 
   async findAllMessages(uid: string, roomName: string) {
-    // console.log(' looking for messages in Room Name ', roomName);
     const chatRoom: ChatRoom = await this.chatRoomRepo.findOne({
       where: [
         {
@@ -764,7 +734,6 @@ export class ChatService {
       ],
       relations: ['messages', 'banned'],
     });
-    // console.log(' looking for messages in Room Name ', chatRoom);
 
     if (
       chatRoom?.banned &&
@@ -782,10 +751,8 @@ export class ChatService {
         ownerId: message.ownerId,
       };
     });
-    // console.log('messages', chatRoom.messages);
     const blockList = await this.userService.getUserBlockList(uid);
 
-    console.log('BLOCK LIST for user ', uid, blockList, messages);
 
     return messages.filter((m) => {
       return !blockList.find((u: User) => {
@@ -824,16 +791,9 @@ export class ChatService {
         throw new UnauthorizedException();
       const blockList = await this.userService.getUserBlockList(uid);
       const blockedByList = await this.userService.getUserBlockedByList(uid);
-      console.log(
-        'BLOCKedBY LIST for user ',
-        uid,
-        blockedByList,
-        chat.messages,
-      );
 
       if (chat.type == 'private') {
         const other = chat.members.find((u) => uid != u.uid);
-        console.log('OTHER ', other);
         if (blockedByList.find((u) => u.uid == other.uid))
           throw new UnauthorizedException();
         if (blockList.find((u) => u.uid == other.uid))
@@ -853,7 +813,6 @@ export class ChatService {
       };
       // get user from database ?
     } catch (e) {
-      console.log(e);
       throw new NotFoundException('room not found');
     }
   }

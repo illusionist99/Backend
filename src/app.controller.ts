@@ -38,9 +38,7 @@ export class AppController {
   @Get('auth/generate')
   @UseGuards(jwtRefreshAuthGuard)
   async test(@Request() req) {
-    //console.log('generate user payloadßß  : ' , req.user);
     const userId: string = req.user.sub;
-    //console.log('current user ', userId);
     if (!userId) throw new UnauthorizedException();
     const { secret, otpauthUrl } = await this.authService.setupMfa(userId);
     return { secret, url: await this.authService.generateQrCode(otpauthUrl) };
@@ -58,7 +56,6 @@ export class AppController {
 
     const isValid = await this.authService.ValidateTfa(body.code, body.secret);
 
-    //console.log('Token is Valide ', isValid);
     if (!isValid) throw new UnauthorizedException();
 
     await this.userService.EnableTfa(userId);
@@ -99,7 +96,6 @@ export class AppController {
     @Body() body,
     @Response({ passthrough: true }) res,
   ) {
-    //console.log('request ljat ', request.user);
     const user: User = await this.userService.findById(request.user.sub);
 
     if (!user) throw new ForbiddenException();
@@ -114,7 +110,6 @@ export class AppController {
     }
     res.cookie('tfa-rft', new Date(), { httpOnly: true, sameSite: 'strict' });
 
-    //console.log('code is valid ', isCodeValid);
     const tokens = await this.authService.loginWith2fa(request.user.sub);
     if (!tokens) throw new ForbiddenException();
     res.cookie('jwt-rft', tokens['refreshToken'], {
@@ -131,11 +126,9 @@ export class AppController {
     @Response({ passthrough: true }) res,
   ): Promise<any> {
     code = code['code'];
-    console.log(' code is here ', code);
     const { newUser, tokens, isNew } = await this.authService.findOrCreate(
       code,
     );
-    console.log(' user is : ', newUser, ' toekns are : ', tokens);
     if (!tokens) throw new ForbiddenException();
     if (tokens['tfaEnabled'] === true) {
       const jwtTfa = await this.authService.tfaJwt(newUser, tokens);
@@ -163,14 +156,12 @@ export class AppController {
   @Post('auth/login')
   @UseGuards(LocalGuard)
   async login(@Request() req, @Response({ passthrough: true }) res) {
-    //console.log('trying to log user ', req.user);
     const payload = await this.authService.getTokens(
       req.user.uid,
       req.user.username,
       req.user.tfaEnabled,
       false,
     );
-    //console.log(payload);
     const user = await this.userService.findById(req.user.uid);
     if (payload['tfaEnabled'] === true) {
       const jwtTfa = await this.authService.tfaJwt(user, payload);
@@ -205,7 +196,6 @@ export class AppController {
   @Get('auth/logout')
   @UseGuards(jwtRefreshAuthGuard)
   logout(@Request() req, @Response({ passthrough: true }) res) {
-    //console.log('request dyal logout ', req.user);
     res.cookie(
       'jwt-rft',
       { expires: Date.now() },

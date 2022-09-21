@@ -49,7 +49,6 @@ export class ChatGateway
     @InjectRepository(User) private readonly repoUser: Repository<User>,
     private readonly userService: UserService,
   ) {
-    console.log('GATEWAY CONSSTRRUCTOJDSGOJGSJDD');
   }
 
   @WebSocketServer()
@@ -62,9 +61,7 @@ export class ChatGateway
       this.server
         .to(this.userIdToSocketId.get(receiver))
         .emit('newMessage', { room });
-    else {
-      console.log(receiver, 'is disconnected');
-    }
+    else {}
   }
 
   async emitNotification(
@@ -78,7 +75,6 @@ export class ChatGateway
         .to(this.userIdToSocketId.get(receiver))
         .emit('notification', { type, sender, room });
     else {
-      console.log(receiver, 'is disconnected');
     }
   }
 
@@ -144,7 +140,6 @@ export class ChatGateway
     });
     //(client.data.user.uid);
     // room.owner = client.data.user.uid;
-    console.log('BBBbruh');
     room.members = [user];
     room.admins = [user];
     room.banned = [];
@@ -183,7 +178,6 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() message: { room: string; message: string },
   ): Promise<ChatMessage> {
-    console.log('client connected', client.data);
     //('user send msg to server ', client.data.user);
     const chatMessage: ChatMessage = new createChatMessageDto();
     //(client.data);
@@ -210,14 +204,6 @@ export class ChatGateway
       roomO = await this.createRoom(client, message['room']);
 
     if (!message['message'].length) return;
-
-    console.log(
-      'sending message to rooom ',
-      message['room'],
-      ' message is ',
-      message['message'],
-      roomO,
-    );
 
     chatMessage.roomId = roomO.cid;
     chatMessage.username = client.data.user.username;
@@ -259,13 +245,11 @@ export class ChatGateway
         ])
         .emit('newMessage', { room: message['room'] });
     }
-    console.log('EMITING GFGDFGSDFGSDF');
     return this.chatService.create(chatMessage);
   }
 
   @SubscribeMessage('joinRoomToServer')
   async joinRoom(client: Socket, room: string) {
-    console.log('recieved room : ', room);
 
     if (room === 'public') await this.create(client, { room, message: '' });
 

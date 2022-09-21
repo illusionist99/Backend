@@ -12,7 +12,6 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh') {
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           const data = request?.cookies['jwt-rft'];
-          //console.log(" refresh Token currently used ",data);
           if (!data) return null;
           return data;
         },
@@ -23,18 +22,14 @@ export class JwtStartRefresh extends PassportStrategy(Strategy, 'jwtRefresh') {
   }
 
   async validate(payload: jwtPayload) {
-    // console.log('validation user using jwt start refresher ', payload);
     const userId: string = payload.sub;
 
     const user = await this.userService.findById(userId);
-    console.log(user);
     if (!user) throw new UnauthorizedException();
     return payload;
-    // //console.log('checking if tfa is enabled');
     // if (!user.tfaEnabled)
     //     return payload;
 
-    // //console.log('checking if tfa is auth ');
     // if (payload.tfaAuth)
     //     return payload;
   }

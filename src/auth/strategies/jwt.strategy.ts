@@ -21,7 +21,6 @@ export class JwtStartegy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: jwtPayload) {
-    // console.log('validation user using jwt start  ', payload);
     const userId: string = payload.sub;
 
     const user = await this.userService.findById(userId);

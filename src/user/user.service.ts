@@ -48,7 +48,6 @@ export class UserService {
   }
 
   async ValidateTfa(code: string, secret: string): Promise<boolean> {
-    //console.log('validatinng ', code, secret);
     return authenticator.verify({ token: code, secret });
   }
 
@@ -134,7 +133,6 @@ export class UserService {
         },
       ],
     });
-    console.log('all blocks of user ', uid, allBlocked);
     users = users.filter((u) => {
       // rleave users who blocked me
       if (
@@ -191,7 +189,6 @@ export class UserService {
     newUser.chatRooms = [];
     newUser.avatar = process.env.USERS_AVATAR_API + newUser.nickname + '.svg';
     // createUserDto.password = bycrypt
-    // //console.log(newUser, username, password);
     // this.userRepo.create(newUser);
     return await this.userRepo.save(newUser);
   }
@@ -251,7 +248,6 @@ export class UserService {
     // `This action returns a #${id} user`;
 
     const user = await this.userRepo.findOne({ where: { uid } });
-    //console.log(user);
     if (user)
       return {
         ...user,
@@ -279,7 +275,6 @@ export class UserService {
           nickname: data.nickname,
         },
       });
-      console.log('nickname', nicknameExists, 'nickname ', data.nickname, data);
       if (nicknameExists)
         throw new UnauthorizedException('nickname Already Used');
     }
@@ -336,13 +331,11 @@ export class UserService {
   async incrementWins(id: string) {
     let user = await this.userRepo.findOne({ where: { uid: id } });
     user = { ...user, wins: user.wins + 1 };
-    //console.log('incrementing wins');
     return this.userRepo.save(user);
   }
   async incrementLosses(id: string) {
     let user = await this.userRepo.findOne({ where: { uid: id } });
     user = { ...user, losses: user.losses + 1 };
-    //console.log('incrementing losses');
 
     return this.userRepo.save(user);
   }
@@ -352,7 +345,6 @@ export class UserService {
     // await this.incrementLevel(winner);
     user = { ...user, xp: user.xp + amount };
 
-    //console.log('incrementing xp');
 
     const lvlFactor = this.lvlFactor;
 
@@ -360,7 +352,6 @@ export class UserService {
     let TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
     let currentXp = user.xp;
 
-    //console.log({ xpNeededForLevel, TotalXpNeeded, currentXp });
 
     while (currentXp >= TotalXpNeeded) {
       user.level++;
@@ -368,14 +359,12 @@ export class UserService {
       // xpNeededForLevel = user.level * lvlFactor;
       TotalXpNeeded = ((user.level * (user.level + 1)) / 2) * lvlFactor; // lvl 4 / xpneededforlevel = 400 / currentxp = 440
       currentXp = user.xp;
-      //console.log('level Up ');
     }
     return this.userRepo.save(user);
   }
   async incrementLevel(id: string) {
     let user = await this.userRepo.findOne({ where: { uid: id } });
     user = { ...user, level: user.level };
-    //console.log('incrementing level');
 
     return this.userRepo.save(user);
   }

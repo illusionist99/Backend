@@ -112,7 +112,6 @@ export class FriendsService {
     });
     return await Promise.all(
       reqs.map((r) => {
-        //console.log((r.sender as any).uid === userId ? r.receiver : r.sender);
         return (r.sender as any).uid === userId ? r.receiver : r.sender;
       }),
     );
@@ -164,7 +163,6 @@ export class FriendsService {
 
     // createdRoom.type = 'private';
 
-    // // console.log('created Room after accepted frienship ', createdRoom);
     // await this.chatService.createRoom(createdRoom);
     return await this.friendRequestRepo.update(uid, { status });
   }
@@ -189,7 +187,6 @@ export class FriendsService {
     });
 
     if (!friendship) {
-      console.log(friendship);
       friendship = await this.friendRequestRepo.save({
         sender: userId,
         receiver: toBlockuid,
@@ -201,8 +198,7 @@ export class FriendsService {
         where: { uid: friendship.uid },
         relations: ['sender', 'receiver'],
       });
-      // console.log('friendship created ');
-    } else console.log('friendship already exists ');
+    }
     if (
       (friendship.receiver as unknown as User).uid !== userId &&
       (friendship.sender as unknown as User).uid !== userId
@@ -216,10 +212,6 @@ export class FriendsService {
       sender: (friendship.sender as unknown as User).uid,
       receiver: (friendship.receiver as unknown as User).uid,
     });
-    console.log(
-      friendship.sender as unknown as User,
-      friendship.receiver as unknown as User,
-    );
     const r = await this.chatRepo.findOne({
       where: {
         type: 'private',
@@ -229,7 +221,6 @@ export class FriendsService {
         ],
       },
     });
-    console.log('ROOOM  PRIVATE BLOCK ', r);
     this.chatGateway.emitConvsRefreshRequest(
       [
         (friendship.sender as unknown as User).uid,

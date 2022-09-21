@@ -29,7 +29,6 @@ export class FriendsGateway
 
   afterInit(server: Server) {
     this.server = server;
-    console.log('FRIENDS GATEWAY READY');
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -50,9 +49,7 @@ export class FriendsGateway
         .filter((cookie) => {
           return cookie.substring(0, cookieName.length) === cookieName;
         });
-      console.log('cookies ', cookies);
     } catch (error) {
-      console.log('cookies arent found');
       return error;
     }
     const refreshToken: string = cookies[0].split('=')[1];
@@ -74,7 +71,6 @@ export class FriendsGateway
   // async test(@ConnectedSocket() client: Socket, room: string): Promise<void> {
   //   if (!client.data.user) return;
 
-  //   console.log('received event from  : ', client.id, client.data.user as any);
   //   // client.join(room);
   //   // client.emit('joinedRoom', room);
   // }
@@ -89,7 +85,6 @@ export class FriendsGateway
         .to(this.usernameToSocketId.get(receiver))
         .emit('notification', { type, sender });
     else {
-      console.log(receiver, 'is disconnected');
     }
   }
 
@@ -99,7 +94,6 @@ export class FriendsGateway
         .to(this.usernameToSocketId.get(receiver))
         .emit('joinedRoom', { room });
     else {
-      console.log(receiver, 'is disconnected');
     }
   }
 }

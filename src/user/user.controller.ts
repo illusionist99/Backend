@@ -38,7 +38,6 @@ export class UserController {
     @Request() req,
     @Query('query') searchParam: string,
   ): Promise<User[]> {
-    //console.log('Query string received : ', searchParam);
     //if (!searchParam) throw new ForbiddenException();
     return this.userService.searchUsers(req.user.sub, searchParam);
   }
@@ -49,7 +48,6 @@ export class UserController {
     const user: User = await this.userService.findByUsername(username);
     if (!user) throw new NotFoundException();
 
-    //console.log(req.user)
 
     const me = req.user.sub;
     if (user.uid == req.user.sub)
@@ -106,7 +104,6 @@ export class UserController {
     @UploadedFile(
       new ParseFilePipe({
         // exceptionFactory(error) {
-        //   console.log('eroor----->', error);
         //   throw error;
         // },
         validators: [
@@ -151,14 +148,6 @@ export class UserController {
       throw new BadRequestException();
     return this.userService.setStatus(req.user.sub, data.status);
   }
-  // @Post(':id/avatar') // update avatar
-  // @UseInterceptors(FileInterceptor('file'))
-  // async updateAvatar(uid: string, @UploadedFile() file: Express.Multer.File) {
-  //   // if (!newNickName) throw new ForbiddenException
-  //   console.log('file is :', file);
-  //   return this.userService.updateAvatar(uid, file);
-  // }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     if (!validate(id)) throw new BadRequestException();

@@ -15,7 +15,14 @@ export class GameService {
     private gameRepo: Repository<Game>,
     private userService: UserService,
     private chatService: ChatService,
-  ) {}
+
+  ) {
+    this.gameRepo.update({},{status : 1});
+  }
+
+  async clearCurrentGames(){
+    await this.gameRepo.update({},{status : 1});
+  }
 
   async createGame(dto: CreateGameDto): Promise<Game> {
     try {
@@ -24,11 +31,10 @@ export class GameService {
       // room.owner = dto.playerOne;
       room.name = dto.gameId;
       room.type = 'public';
+      room.owner = ""
 
       await this.chatService.createRoom(room);
-      console.log('Created chat room', room);
     } catch (e) {
-      console.log('couldnt create game chatroom');
     }
 
     // await this.userService.incrementLevel(winner);
@@ -60,7 +66,6 @@ export class GameService {
       await this.userService.incrementLosses(loser);
       await this.userService.setStatus(game.playerOne, 'online');
       await this.userService.setStatus(game.playerTwo, 'online');
-      console.log('saving game update');
       return this.gameRepo.save(game);
     }
     return;

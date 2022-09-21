@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Body,
+  Delete,
   Param,
   ValidationPipe,
   BadRequestException,
@@ -23,29 +24,33 @@ export class GameController {
     private readonly userService: UserService,
   ) {}
 
-  // @Post()
-  // createLocal(@Body() localgame: JSON) {
 
-  //   return this.gameService.createLocal(localgame["gamename"], localgame["password"]);
-  // }
+  @Delete()
+  clearCurrentGames() {
+    return this.gameService.clearCurrentGames();
+  }
 
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Post()
   createGame(@Body() dto: CreateGameDto) {
     return this.gameService.createGame(dto);
   }
 
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Post(':id')
   updateGame(@Param('id') gameId: string, @Body() dto: UpdateGameDto) {
     if (!gameId.length) throw new BadRequestException();
     return this.gameService.updateGame(gameId, dto);
   }
 
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Get()
   // @UseGuards(isAuthGuard)
   getAllGames() {
     return this.gameService.getAllGames();
   }
 
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Get('/history/:id')
   // @UseGuards(isAuthGuard)
   getUserGameHistory(@Param('id') id: string) {
@@ -53,31 +58,17 @@ export class GameController {
     return this.gameService.getUserGameHistory(id);
   }
 
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Get('/current/:id')
   // @UseGuards(isAuthGuard)
   getUserCurrentGame(@Param('id') id: string) {
-    console.log();
     if (!validate(id)) throw new BadRequestException();
     return this.gameService.getUserCurrentGame(id);
   }
+// @UseGuards(jwtRefreshAuthGuard, JwtAuthGuard)
   @Get('leaderboard/')
   leaderboard(@Request() req) {
     return this.userService.leaderboard();
   }
-  // // @UseGuards(isAuthGuard)
-  // @Get(':id/')
-  // async findOne(@Param('id') id: string) {
-  //   return this.gameService.findOne(id);
-  // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updategameDto: UpdategameDto) {
-  //   return this.gameService.update(+id, updategameDto);
-  // }
-
-  //   @Delete(':id')
-  //   // @UseGuards(isAuthGuard)
-  //   remove(@Param('id') id: string) {
-  //     return this.userService.remove(id);
-  //   }
 }

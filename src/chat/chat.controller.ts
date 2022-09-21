@@ -26,7 +26,6 @@ export class ChatController {
 
   @Get('find')
   async searchByname(@Query('name') name: string): Promise<ChatRoom[]> {
-    console.log(' seach for room with ', name);
     return this.chatService.searchByname(name);
   }
 
@@ -43,7 +42,6 @@ export class ChatController {
     const chatRoom: string = data.cid;
     const newAdmin: string = data.uid;
 
-    console.log('---->', data);
 
     if (!userId || !chatRoom || !newAdmin) throw new UnauthorizedException();
 
@@ -61,7 +59,6 @@ export class ChatController {
     const chatRoom = data.cid;
     const newMembers = data.members;
 
-    console.log('add memeber ---->', data);
 
     if (!userId) throw new UnauthorizedException();
     else if (!chatRoom || !newMembers) throw new BadRequestException();
@@ -95,7 +92,6 @@ export class ChatController {
     const chatRoom: string = data.cid;
     const deleteMember: string = data.uid;
 
-    console.log('-----> ids', userId, chatRoom, deleteMember);
 
     if (!userId || !chatRoom || !deleteMember)
       throw new UnauthorizedException();
@@ -203,14 +199,12 @@ export class ChatController {
     @Request() req,
     @Body() createRoom: createChatRoomDto,
   ): Promise<void> {
-    console.log(' user is ', req.user);
     await this.chatService.createRoom(createRoom);
     return;
   }
 
   @Get('/messages/:roomname')
   async getAllMessages(@Param('roomname') roomName: string, @Request() req) {
-    console.log(' looking for room name ', roomName);
     if (!roomName) throw new BadRequestException('specify room name');
     const userId: string = req.user.sub;
 
@@ -225,7 +219,6 @@ export class ChatController {
   @Get(':cid')
   async getRoomBycid(@Req() req, @Param('cid') cid: string) {
     if (!validate(cid)) throw new BadRequestException();
-    console.log(' looking for room id : ', cid);
     return this.chatService.findOne(req.user.sub, cid);
   }
 }

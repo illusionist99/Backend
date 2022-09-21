@@ -17,20 +17,16 @@ export class JwtWebSocketGuard implements CanActivate {
           .filter((cookie) => {
             return cookie.substring(0, cookieName.length) === cookieName;
           });
-        //console.log('cookies ', cookies);
       } catch (error) {
-        //console.log('cookies arent found');
         return error;
       }
 
       const refreshToken: string = cookies[0].split('=')[1];
 
-      //console.log('ws cookie extractd token ', refreshToken);
       const payload = await this.authService.verifyRT(refreshToken);
 
       const user: User = await this.authService.ValidatePayload(payload);
       if (user) {
-        //console.log('authenticated user in wsguard', user);
         client.data.user = user;
         return true;
       }

@@ -18,10 +18,7 @@ import { tfaStatregy } from './auth/strategies/tfa.strategy';
 import { NotificationModule } from './notifications/notification.module';
 import { Notification } from './entities/notification.entity';
 import { Mute } from './entities/mute.entity';
-import { ChatGateway } from './chat/chat.gateway';
-import { UserService } from './user/user.service';
 
-//console.log(process.env);
 
 @Module({
   imports: [
